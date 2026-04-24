@@ -53,7 +53,7 @@ export function Composer() {
   return (
     <div className="border-t border-[var(--color-divider)] p-4">
       <div className="flex items-end gap-2 rounded-lg bg-[var(--color-surface)] px-3 py-2">
-        <label className="cursor-pointer text-neutral-400 hover:text-neutral-200">
+        <label className="cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
           <Paperclip className="h-5 w-5" />
           <input
             type="file"
@@ -69,7 +69,7 @@ export function Composer() {
           disabled={disabled}
           placeholder={disabled ? 'Select a room to chat' : 'Message'}
           rows={1}
-          className="max-h-40 flex-1 resize-none bg-transparent py-1 text-sm text-neutral-100 outline-none placeholder:text-neutral-500 disabled:opacity-60"
+          className="max-h-40 flex-1 resize-none bg-transparent py-1 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-faint)] disabled:opacity-60"
         />
       </div>
     </div>

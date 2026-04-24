@@ -33,18 +33,18 @@ export function MainPane() {
           {room?.isEncrypted ? (
             <Lock className="h-5 w-5 text-emerald-500" />
           ) : (
-            <Hash className="h-5 w-5 text-neutral-400" />
+            <Hash className="h-5 w-5 text-[var(--color-text-muted)]" />
           )}
           <h1 className="font-semibold">{room?.name ?? 'Select a room'}</h1>
           {room?.topic && (
-            <span className="ml-2 truncate text-xs text-neutral-400">— {room.topic}</span>
+            <span className="ml-2 truncate text-xs text-[var(--color-text-muted)]">— {room.topic}</span>
           )}
         </div>
         <div className="flex items-center gap-2 titlebar-no-drag">
           {room && (
             <button
               type="button"
-              className="rounded p-1.5 text-neutral-400 hover:bg-white/10 hover:text-white"
+              className="rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
               title="Start call"
               onClick={onStartCall}
             >
@@ -53,7 +53,7 @@ export function MainPane() {
           )}
           <button
             type="button"
-            className="rounded p-1.5 text-neutral-400 hover:bg-white/10 hover:text-white"
+            className="rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
             title="Toggle member list"
             onClick={toggleMembers}
           >

@@ -97,18 +97,18 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60">
+    <div className="absolute inset-0 z-40 flex items-center justify-center bg-[var(--color-backdrop)]">
       <div className="flex h-[80vh] w-[820px] flex-col rounded-xl bg-[var(--color-panel)] shadow-2xl">
         <header className="flex h-12 items-center justify-between border-b border-[var(--color-divider)] px-4">
           <h2 className="font-semibold">Settings</h2>
-          <button type="button" className="rounded p-1 hover:bg-white/10" onClick={onClose}>
+          <button type="button" className="rounded p-1 hover:bg-[var(--color-hover-overlay)]" onClick={onClose}>
             <X className="h-4 w-4" />
           </button>
         </header>
 
         <div className="flex-1 overflow-y-auto p-6">
           <section className="mb-6">
-            <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-neutral-400">
+            <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
               Encryption
             </h3>
             <button
@@ -127,7 +127,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
           </section>
 
           <section>
-            <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-neutral-400">
+            <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
               Devices
             </h3>
             <ul className="space-y-1">
@@ -137,8 +137,8 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
                   className="flex items-center justify-between rounded-md bg-[var(--color-surface)] px-3 py-2 text-sm"
                 >
                   <div>
-                    <div className="font-medium text-white">{d.displayName || d.id}</div>
-                    <div className="text-xs text-neutral-500">
+                    <div className="font-medium text-[var(--color-text-strong)]">{d.displayName || d.id}</div>
+                    <div className="text-xs text-[var(--color-text-faint)]">
                       {d.id}
                       {d.lastSeenTs ? ` · ${new Date(d.lastSeenTs).toLocaleString()}` : ''}
                     </div>
@@ -181,10 +181,10 @@ function VerificationIncoming({
   onDecline: () => void;
 }) {
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70">
+    <div className="absolute inset-0 z-50 flex items-center justify-center bg-[var(--color-backdrop-strong)]">
       <div className="w-[360px] rounded-xl bg-[var(--color-panel-2)] p-6 text-center">
         <h3 className="mb-3 text-lg font-semibold">Incoming verification</h3>
-        <p className="mb-4 text-sm text-neutral-300">
+        <p className="mb-4 text-sm text-[var(--color-text-muted)]">
           Another session wants to verify this one.
         </p>
         <div className="flex justify-center gap-2">
@@ -216,17 +216,17 @@ function VerificationEmoji({
   onClose: () => void;
 }) {
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70">
+    <div className="absolute inset-0 z-50 flex items-center justify-center bg-[var(--color-backdrop-strong)]">
       <div className="w-[460px] rounded-xl bg-[var(--color-panel-2)] p-6 text-center">
         <h3 className="mb-1 text-lg font-semibold">Compare emojis</h3>
-        <p className="mb-4 text-sm text-neutral-400">
+        <p className="mb-4 text-sm text-[var(--color-text-muted)]">
           Both devices should show the same emojis in the same order.
         </p>
         <div className="mb-4 flex flex-wrap justify-center gap-3">
           {handle.emoji.map(([emoji, label]) => (
             <div key={label} className="w-16">
               <div className="text-3xl">{emoji}</div>
-              <div className="text-xs text-neutral-400">{label}</div>
+              <div className="text-xs text-[var(--color-text-muted)]">{label}</div>
             </div>
           ))}
         </div>

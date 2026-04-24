@@ -71,7 +71,7 @@ export function ThreadPane() {
         <button
           type="button"
           onClick={() => close(null)}
-          className="rounded p-1 hover:bg-white/10"
+          className="rounded p-1 hover:bg-[var(--color-hover-overlay)]"
         >
           <X className="h-4 w-4" />
         </button>

@@ -33,7 +33,7 @@ export function Timeline() {
 
   if (!activeRoomId) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-neutral-500">
+      <div className="flex h-full items-center justify-center text-sm text-[var(--color-text-faint)]">
         Select a room
       </div>
     );

@@ -87,7 +87,7 @@ function AccountCluster({
           'group relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl transition-all duration-150 hover:rounded-xl',
           active
             ? 'ring-2 ring-[var(--color-accent)]'
-            : 'bg-[var(--color-panel)] text-neutral-300 hover:bg-[var(--color-accent)] hover:text-white',
+            : 'bg-[var(--color-panel)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent)] hover:text-white',
         )}
       >
         <InitialBadge text={displayName || userId} />
@@ -127,7 +127,7 @@ function SpaceButton({
         // eslint-disable-next-line jsx-a11y/alt-text
         <img src={avatar} className="h-full w-full object-cover" />
       ) : (
-        <Hash className="h-4 w-4 text-neutral-300" />
+        <Hash className="h-4 w-4 text-[var(--color-text-muted)]" />
       )}
     </button>
   );
@@ -162,8 +162,8 @@ function RailButton({
       className={cn(
         'flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-150 hover:rounded-xl',
         variant === 'secondary'
-          ? 'bg-[var(--color-rail-hover)] text-neutral-300 hover:bg-[var(--color-accent)] hover:text-white'
-          : 'bg-[var(--color-panel)] text-neutral-300 hover:bg-[var(--color-accent)] hover:text-white',
+          ? 'bg-[var(--color-rail-hover)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent)] hover:text-white'
+          : 'bg-[var(--color-panel)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent)] hover:text-white',
       )}
     >
       {icon}

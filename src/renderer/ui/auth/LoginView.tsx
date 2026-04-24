@@ -92,20 +92,20 @@ export function LoginView() {
   }
 
   return (
-    <div className="flex h-full w-full items-center justify-center bg-neutral-950 text-neutral-100">
+    <div className="flex h-full w-full items-center justify-center bg-[var(--color-bg)] text-[var(--color-text)]">
       <form
         onSubmit={onPasswordSubmit}
         className="w-full max-w-md space-y-4 rounded-xl bg-[var(--color-panel)] p-8 shadow-xl"
       >
         <div className="text-center">
           <h1 className="text-2xl font-semibold">Sign in to Matrix</h1>
-          <p className="mt-1 text-sm text-neutral-400">
+          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
             Use any homeserver — matrix.org, your own, or a work deployment.
           </p>
         </div>
 
         <label className="block text-sm">
-          <span className="mb-1 block font-medium text-neutral-300">Homeserver</span>
+          <span className="mb-1 block font-medium text-[var(--color-text)]">Homeserver</span>
           <div className="flex gap-2">
             <input
               value={homeserver}
@@ -114,14 +114,14 @@ export function LoginView() {
                 setFlows(null);
               }}
               placeholder="matrix.org or https://your.server"
-              className="flex-1 rounded-md bg-[var(--color-surface)] px-3 py-2 text-neutral-100 outline-none ring-1 ring-transparent focus:ring-[var(--color-accent)]"
+              className="flex-1 rounded-md bg-[var(--color-surface)] px-3 py-2 text-[var(--color-text)] outline-none ring-1 ring-transparent focus:ring-[var(--color-accent)]"
               autoComplete="url"
               required
             />
             <button
               type="button"
               onClick={onDiscoverFlows}
-              className="rounded-md bg-[var(--color-surface)] px-3 py-2 text-sm text-neutral-200 hover:bg-[var(--color-panel-2)]"
+              className="rounded-md bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-panel-2)]"
             >
               Continue
             </button>
@@ -129,23 +129,23 @@ export function LoginView() {
         </label>
 
         <label className="block text-sm">
-          <span className="mb-1 block font-medium text-neutral-300">Username</span>
+          <span className="mb-1 block font-medium text-[var(--color-text)]">Username</span>
           <input
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="you or @you:example.org"
-            className="w-full rounded-md bg-[var(--color-surface)] px-3 py-2 text-neutral-100 outline-none ring-1 ring-transparent focus:ring-[var(--color-accent)]"
+            className="w-full rounded-md bg-[var(--color-surface)] px-3 py-2 text-[var(--color-text)] outline-none ring-1 ring-transparent focus:ring-[var(--color-accent)]"
             autoComplete="username"
           />
         </label>
 
         <label className="block text-sm">
-          <span className="mb-1 block font-medium text-neutral-300">Password</span>
+          <span className="mb-1 block font-medium text-[var(--color-text)]">Password</span>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md bg-[var(--color-surface)] px-3 py-2 text-neutral-100 outline-none ring-1 ring-transparent focus:ring-[var(--color-accent)]"
+            className="w-full rounded-md bg-[var(--color-surface)] px-3 py-2 text-[var(--color-text)] outline-none ring-1 ring-transparent focus:ring-[var(--color-accent)]"
             autoComplete="current-password"
           />
         </label>
@@ -164,7 +164,7 @@ export function LoginView() {
 
         {(flows?.providers.length ?? 0) > 0 && (
           <div className="space-y-2 border-t border-[var(--color-divider)] pt-3 text-sm">
-            <div className="text-center text-xs uppercase tracking-wide text-neutral-500">
+            <div className="text-center text-xs uppercase tracking-wide text-[var(--color-text-faint)]">
               Single sign-on
             </div>
             {flows!.providers.map((p) => (
@@ -172,7 +172,7 @@ export function LoginView() {
                 key={p.id}
                 type="button"
                 onClick={() => onSsoLogin(p.id)}
-                className="flex w-full items-center justify-center gap-2 rounded-md bg-[var(--color-surface)] px-3 py-2 text-neutral-200 hover:bg-[var(--color-panel-2)]"
+                className="flex w-full items-center justify-center gap-2 rounded-md bg-[var(--color-surface)] px-3 py-2 text-[var(--color-text)] hover:bg-[var(--color-panel-2)]"
               >
                 {p.name ?? p.id}
               </button>
@@ -184,7 +184,7 @@ export function LoginView() {
           <button
             type="button"
             onClick={() => onSsoLogin()}
-            className="w-full rounded-md bg-[var(--color-surface)] px-4 py-2 text-neutral-200 hover:bg-[var(--color-panel-2)]"
+            className="w-full rounded-md bg-[var(--color-surface)] px-4 py-2 text-[var(--color-text)] hover:bg-[var(--color-panel-2)]"
           >
             Continue with SSO
           </button>

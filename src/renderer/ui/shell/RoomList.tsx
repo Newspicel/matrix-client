@@ -70,10 +70,10 @@ export function RoomList() {
       <footer className="flex h-14 items-center gap-2 border-t border-[var(--color-divider)] bg-[var(--color-panel-2)] px-2">
         <div className="h-8 w-8 rounded-full bg-[var(--color-accent)]" aria-hidden />
         <div className="flex min-w-0 flex-col text-xs">
-          <span className="truncate font-semibold text-white">
+          <span className="truncate font-semibold text-[var(--color-text-strong)]">
             {account?.userId ?? 'Not signed in'}
           </span>
-          <span className="truncate text-neutral-400">
+          <span className="truncate text-[var(--color-text-muted)]">
             {account?.syncState ?? 'idle'}
           </span>
         </div>
@@ -98,7 +98,7 @@ function RoomGroup({
   if (rooms.length === 0) return null;
   return (
     <div className="mt-2">
-      <div className="px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+      <div className="px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
         {title}
       </div>
       <ul className="space-y-0.5">
@@ -110,10 +110,10 @@ function RoomGroup({
               className={cn(
                 'flex w-full items-center gap-2 rounded px-2 py-1.5 text-left transition-colors',
                 activeRoomId === r.roomId
-                  ? 'bg-[var(--color-surface)] text-white'
-                  : 'text-neutral-300 hover:bg-[var(--color-panel-2)] hover:text-white',
+                  ? 'bg-[var(--color-surface)] text-[var(--color-text-strong)]'
+                  : 'text-[var(--color-text-muted)] hover:bg-[var(--color-panel-2)] hover:text-[var(--color-text-strong)]',
                 (r.unread > 0 || r.highlights > 0) && activeRoomId !== r.roomId &&
-                  'font-semibold text-white',
+                  'font-semibold text-[var(--color-text-strong)]',
               )}
             >
               <RoomIcon room={r} client={client} />
@@ -123,7 +123,7 @@ function RoomGroup({
                   {r.highlights}
                 </span>
               ) : r.unread > 0 ? (
-                <span className="rounded bg-neutral-600 px-1.5 text-[10px]">{r.unread}</span>
+                <span className="rounded bg-[var(--color-surface)] px-1.5 text-[10px]">{r.unread}</span>
               ) : null}
             </button>
           </li>
@@ -137,8 +137,8 @@ function RoomIcon({ room, client }: { room: RoomSummary; client: import('matrix-
   const avatar = client ? mxcToHttp(client, room.avatarMxc, 28, 28) : null;
   if (avatar) {
     // eslint-disable-next-line jsx-a11y/alt-text
-    return <img src={avatar} className="h-5 w-5 rounded-full bg-neutral-700 object-cover" />;
+    return <img src={avatar} className="h-5 w-5 rounded-full bg-[var(--color-surface)] object-cover" />;
   }
   const Icon = room.isDirect ? Volume2 : room.isEncrypted ? Lock : Hash;
-  return <Icon className="h-4 w-4 text-neutral-500" />;
+  return <Icon className="h-4 w-4 text-[var(--color-text-faint)]" />;
 }

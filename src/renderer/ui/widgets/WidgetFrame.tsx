@@ -63,7 +63,7 @@ export function WidgetFrame({ roomId }: { roomId: string }) {
   }, []);
 
   if (widgets.length === 0) {
-    return <div className="p-4 text-sm text-neutral-500">No widgets in this room.</div>;
+    return <div className="p-4 text-sm text-[var(--color-text-faint)]">No widgets in this room.</div>;
   }
   const activeWidget = widgets.find((w) => w.stateKey === active) ?? widgets[0];
 
@@ -75,7 +75,7 @@ export function WidgetFrame({ roomId }: { roomId: string }) {
             key={w.stateKey}
             type="button"
             onClick={() => setActive(w.stateKey)}
-            className={`rounded px-2 py-1 ${activeWidget.stateKey === w.stateKey ? 'bg-[var(--color-accent)] text-white' : 'text-neutral-300 hover:bg-white/10'}`}
+            className={`rounded px-2 py-1 ${activeWidget.stateKey === w.stateKey ? 'bg-[var(--color-accent)] text-white' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)]'}`}
           >
             {w.name}
           </button>

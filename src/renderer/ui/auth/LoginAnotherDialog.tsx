@@ -7,12 +7,12 @@ import { LoginView } from './LoginView';
  */
 export function LoginAnotherDialog({ onClose }: { onClose: () => void }) {
   return (
-    <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60">
+    <div className="absolute inset-0 z-40 flex items-center justify-center bg-[var(--color-backdrop)]">
       <div className="relative">
         <button
           type="button"
           onClick={onClose}
-          className="absolute -top-8 right-0 rounded p-1 text-neutral-400 hover:text-white"
+          className="absolute -top-8 right-0 rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)]"
         >
           <X className="h-4 w-4" />
         </button>

@@ -31,7 +31,8 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
   const isMine = client?.getUserId() === entry.sender;
 
   const renderedHtml = useMemo(() => {
-    if (entry.isRedacted) return '<em class="text-neutral-500">[redacted]</em>';
+    if (entry.isRedacted)
+      return '<em style="color: var(--color-text-faint)">[redacted]</em>';
     if (entry.isDecryptionFailure)
       return '<em class="text-amber-400">[unable to decrypt]</em>';
 
@@ -82,14 +83,14 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
   }
 
   return (
-    <div className={`group relative flex gap-3 ${showHeader ? 'mt-2' : 'mt-0.5'} px-2 py-0.5 hover:bg-white/[0.02]`}>
+    <div className={`group relative flex gap-3 ${showHeader ? 'mt-2' : 'mt-0.5'} px-2 py-0.5 hover:bg-[var(--color-hover-overlay-subtle)]`}>
       <div className="absolute right-4 top-0 z-10 hidden -translate-y-1/2 items-center gap-1 rounded-md bg-[var(--color-panel)] p-1 shadow-md group-hover:flex">
         {QUICK_REACTIONS.map((r) => (
           <button
             key={r}
             type="button"
             onClick={() => onReact(r)}
-            className="rounded px-1 text-sm hover:bg-white/10"
+            className="rounded px-1 text-sm hover:bg-[var(--color-hover-overlay)]"
             title={`React with ${r}`}
           >
             {r}
@@ -101,7 +102,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
             const k = prompt('Emoji');
             if (k) void onReact(k);
           }}
-          className="rounded p-1 text-neutral-400 hover:bg-white/10 hover:text-white"
+          className="rounded p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
           title="Custom reaction"
         >
           <SmilePlus className="h-4 w-4" />
@@ -109,7 +110,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
         <button
           type="button"
           onClick={() => setThreadRoot(entry.eventId)}
-          className="rounded p-1 text-neutral-400 hover:bg-white/10 hover:text-white"
+          className="rounded p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
           title="Reply in thread"
         >
           <MessageSquare className="h-4 w-4" />
@@ -119,7 +120,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="rounded p-1 text-neutral-400 hover:bg-white/10 hover:text-white"
+              className="rounded p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
               title="Edit"
             >
               <Pencil className="h-4 w-4" />
@@ -127,7 +128,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
             <button
               type="button"
               onClick={onRedact}
-              className="rounded p-1 text-red-400 hover:bg-white/10"
+              className="rounded p-1 text-red-400 hover:bg-[var(--color-hover-overlay)]"
               title="Delete"
             >
               <Trash2 className="h-4 w-4" />
@@ -140,7 +141,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
             onClick={() => {
               /* Reply flow lives in composer in a later pass. */
             }}
-            className="rounded p-1 text-neutral-400 hover:bg-white/10 hover:text-white"
+            className="rounded p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
             title="Reply"
           >
             <Reply className="h-4 w-4" />
@@ -151,12 +152,12 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
         {showHeader ? (
           avatarUrl ? (
             // eslint-disable-next-line jsx-a11y/alt-text
-            <img src={avatarUrl} className="h-10 w-10 rounded-full bg-neutral-700" />
+            <img src={avatarUrl} className="h-10 w-10 rounded-full bg-[var(--color-surface)]" />
           ) : (
             <div className="h-10 w-10 rounded-full bg-[var(--color-accent)]" />
           )
         ) : (
-          <span className="invisible select-none text-[10px] text-neutral-500 group-hover:visible">
+          <span className="invisible select-none text-[10px] text-[var(--color-text-faint)] group-hover:visible">
             {new Date(entry.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
         )}
@@ -165,8 +166,8 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
       <div className="min-w-0 flex-1">
         {showHeader && (
           <div className="flex items-baseline gap-2">
-            <span className="font-semibold text-white">{entry.sender}</span>
-            <span className="text-xs text-neutral-500">
+            <span className="font-semibold text-[var(--color-text-strong)]">{entry.sender}</span>
+            <span className="text-xs text-[var(--color-text-faint)]">
               {new Date(entry.ts).toLocaleString()}
             </span>
             {entry.isEncrypted && <Lock className="h-3 w-3 text-emerald-500" />}
@@ -184,7 +185,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
             <textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              className="w-full rounded bg-[var(--color-surface)] p-2 text-sm text-neutral-100 outline-none"
+              className="w-full rounded bg-[var(--color-surface)] p-2 text-sm text-[var(--color-text)] outline-none"
               rows={Math.min(8, Math.max(1, draft.split('\n').length))}
             />
             <div className="flex gap-2 text-xs">
@@ -197,7 +198,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
               </button>
               <button
                 type="button"
-                className="rounded bg-[var(--color-surface)] px-2 py-1 text-neutral-200"
+                className="rounded bg-[var(--color-surface)] px-2 py-1 text-[var(--color-text)]"
                 onClick={() => setEditing(false)}
               >
                 Cancel
@@ -206,12 +207,12 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
           </div>
         ) : (
           <div
-            className="prose prose-invert max-w-none text-sm leading-relaxed text-neutral-100 [&_a]:text-sky-400 [&_code]:rounded [&_code]:bg-black/40 [&_code]:px-1"
+            className="prose dark:prose-invert max-w-none text-sm leading-relaxed text-[var(--color-text)] [&_a]:text-sky-400 [&_code]:rounded [&_code]:bg-[var(--color-code-bg)] [&_code]:px-1"
             dangerouslySetInnerHTML={{ __html: renderedHtml }}
           />
         )}
         {entry.editedFromId && (
-          <span className="ml-1 text-[10px] text-neutral-500" title="edited">
+          <span className="ml-1 text-[10px] text-[var(--color-text-faint)]" title="edited">
             (edited)
           </span>
         )}
@@ -220,7 +221,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
             {Object.entries(entry.reactions).map(([key, info]) => (
               <span
                 key={key}
-                className={`rounded-full px-2 py-0.5 text-xs ${info.byMe ? 'bg-[var(--color-accent)] text-white' : 'bg-[var(--color-surface)] text-neutral-300'}`}
+                className={`rounded-full px-2 py-0.5 text-xs ${info.byMe ? 'bg-[var(--color-accent)] text-white' : 'bg-[var(--color-surface)] text-[var(--color-text-muted)]'}`}
               >
                 {key} {info.count}
               </span>

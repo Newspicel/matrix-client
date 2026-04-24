@@ -12,7 +12,7 @@ export function CallOverlay() {
   if (!call) return null;
 
   return (
-    <div className="pointer-events-auto absolute inset-x-10 bottom-10 top-16 z-50 flex flex-col rounded-xl border border-[var(--color-divider)] bg-neutral-950/95 shadow-2xl">
+    <div className="pointer-events-auto absolute inset-x-10 bottom-10 top-16 z-50 flex flex-col rounded-xl border border-[var(--color-divider)] bg-[color-mix(in_srgb,var(--color-bg)_95%,transparent)] shadow-2xl">
       <header className="flex h-10 items-center border-b border-[var(--color-divider)] px-4 text-sm font-semibold">
         Call — {call.roomName}
       </header>
@@ -45,7 +45,7 @@ function CallButton({
       ? 'bg-red-600 hover:bg-red-500 text-white'
       : active
         ? 'bg-[var(--color-accent)] text-white'
-        : 'bg-[var(--color-surface)] text-neutral-300 hover:bg-[var(--color-panel)]';
+        : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-panel)]';
   return (
     <button
       type="button"

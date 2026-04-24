@@ -1,4 +1,4 @@
-import { app, BrowserWindow, desktopCapturer, session, shell } from 'electron';
+import { app, BrowserWindow, desktopCapturer, nativeTheme, session, shell } from 'electron';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { join } from 'node:path';
 import { registerIpcHandlers } from './ipc.js';
@@ -12,6 +12,14 @@ function getMainWindow(): BrowserWindow | null {
   return mainWindow;
 }
 
+// Keep these in sync with --color-bg in src/renderer/styles/global.css.
+const BG_DARK = '#18181b';
+const BG_LIGHT = '#ffffff';
+
+function currentChromeBg(): string {
+  return nativeTheme.shouldUseDarkColors ? BG_DARK : BG_LIGHT;
+}
+
 function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -21,7 +29,7 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
-    backgroundColor: '#18181b',
+    backgroundColor: currentChromeBg(),
     webPreferences: {
       preload: join(__dirname, '../preload/index.mjs'),
       sandbox: false,
@@ -97,6 +105,10 @@ if (!singleInstanceLock) {
     registerDeepLinkProtocol();
     registerIpcHandlers();
     registerNotificationHandlers(getMainWindow);
+
+    nativeTheme.on('updated', () => {
+      mainWindow?.setBackgroundColor(currentChromeBg());
+    });
 
     createWindow();
 

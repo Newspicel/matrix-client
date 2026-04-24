@@ -46,7 +46,7 @@ export function App() {
 
   if (booting) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-neutral-950 text-sm text-neutral-400">
+      <div className="flex h-full w-full items-center justify-center bg-[var(--color-bg)] text-sm text-[var(--color-text-muted)]">
         Loading…
       </div>
     );
@@ -55,7 +55,7 @@ export function App() {
   if (!hasAccounts) return <LoginView />;
 
   return (
-    <div className="flex h-full w-full select-none overflow-hidden bg-neutral-950 text-neutral-100">
+    <div className="flex h-full w-full select-none overflow-hidden bg-[var(--color-bg)] text-[var(--color-text)]">
       <ServerRail />
       <RoomList />
       <MainPane />

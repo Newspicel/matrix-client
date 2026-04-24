@@ -78,13 +78,13 @@ export function PollView({ client, roomId, startEventId, content }: PollRenderer
     });
   }
 
-  if (!start) return <em className="text-neutral-500">[invalid poll]</em>;
+  if (!start) return <em className="text-[var(--color-text-faint)]">[invalid poll]</em>;
   const total = Object.values(tally).reduce((a, b) => a + b, 0) || 1;
 
   return (
     <div className="my-1 rounded-md border border-[var(--color-divider)] bg-[var(--color-surface)] p-3">
       <div className="mb-2 font-medium">
-        {start.question.body} {ended && <span className="text-xs text-neutral-500">· closed</span>}
+        {start.question.body} {ended && <span className="text-xs text-[var(--color-text-faint)]">· closed</span>}
       </div>
       <ul className="space-y-1">
         {start.answers.map((ans) => {
@@ -108,7 +108,7 @@ export function PollView({ client, roomId, startEventId, content }: PollRenderer
                 />
                 <span className="relative z-10 flex justify-between">
                   <span>{answerBody}</span>
-                  <span className="text-xs text-neutral-400">{count} · {pct}%</span>
+                  <span className="text-xs text-[var(--color-text-muted)]">{count} · {pct}%</span>
                 </span>
               </button>
             </li>
