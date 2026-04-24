@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { useAccountsStore } from '@/state/accounts';
+import { useUiStore } from '@/state/ui';
 import { accountManager } from '@/matrix/AccountManager';
 import {
   acceptIncomingVerification,
@@ -230,6 +231,16 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
             </ul>
           </section>
 
+          <section className="mb-6">
+            <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+              Quick reactions
+            </h3>
+            <p className="mb-3 text-xs text-[var(--color-text-muted)]">
+              Emojis shown on hover over a message. Enter one emoji per field; leave blank to drop that slot.
+            </p>
+            <QuickReactionsEditor />
+          </section>
+
           <section>
             <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
               Account
@@ -323,6 +334,46 @@ function VerificationIncoming({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function QuickReactionsEditor() {
+  const quickReactions = useUiStore((s) => s.quickReactions);
+  const setQuickReactions = useUiStore((s) => s.setQuickReactions);
+  // Keep local text so the user can temporarily hold invalid values (e.g.
+  // mid-edit when a field is empty) without us stripping them.
+  const [drafts, setDrafts] = useState<string[]>(() => [...quickReactions, '']);
+
+  useEffect(() => {
+    setDrafts([...quickReactions, '']);
+  }, [quickReactions]);
+
+  function commit(next: string[]) {
+    const cleaned = next.map((s) => s.trim()).filter((s) => s.length > 0);
+    setQuickReactions(cleaned);
+  }
+
+  function updateAt(i: number, v: string) {
+    const next = [...drafts];
+    next[i] = v;
+    // Always keep a trailing blank slot so the user has room to add more.
+    if (i === next.length - 1 && v.trim()) next.push('');
+    setDrafts(next);
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-md bg-[var(--color-surface)] p-3">
+      {drafts.map((value, i) => (
+        <input
+          key={i}
+          value={value}
+          onChange={(e) => updateAt(i, e.target.value)}
+          onBlur={() => commit(drafts)}
+          maxLength={8}
+          className="h-10 w-12 rounded-md bg-[var(--color-panel)] text-center text-lg outline-none ring-1 ring-[var(--color-divider)] focus:ring-[var(--color-accent)]"
+        />
+      ))}
     </div>
   );
 }

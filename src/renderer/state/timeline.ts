@@ -30,14 +30,12 @@ const RENDERED_TYPES = new Set([
   'm.sticker',
   'org.matrix.msc3381.poll.start',
   'm.poll.start',
-  'm.room.member', // for leave/join notices — optional
 ]);
 
-function toEntry(event: MatrixEvent): TimelineEntry | null {
+function toEntry(event: MatrixEvent, memberLookup?: (userId: string) => { name?: string; avatarMxc?: string | null } | null): TimelineEntry | null {
   const type = event.getType();
   if (!RENDERED_TYPES.has(type)) return null;
-  // Skip state events here — members are rendered elsewhere.
-  if (event.isState() && type !== 'm.room.member') return null;
+  if (event.isState()) return null;
 
   const eventId = event.getId();
   const sender = event.getSender();
@@ -47,11 +45,13 @@ function toEntry(event: MatrixEvent): TimelineEntry | null {
     'm.relates_to'
   ];
 
+  const member = memberLookup?.(sender) ?? null;
+
   return {
     eventId,
     sender,
-    senderDisplayName: sender,
-    senderAvatarMxc: null,
+    senderDisplayName: member?.name || sender,
+    senderAvatarMxc: member?.avatarMxc ?? null,
     type,
     content: event.getContent(),
     ts: event.getTs(),
@@ -101,9 +101,14 @@ function rebuildRoom(
   const room = client.getRoom(roomId);
   if (!room) return;
   const events = room.getLiveTimeline().getEvents();
+  const lookupMember = (userId: string) => {
+    const m = room.getMember(userId);
+    if (!m) return null;
+    return { name: m.name, avatarMxc: m.getMxcAvatarUrl() ?? null };
+  };
   const entries: TimelineEntry[] = [];
   for (const ev of events) {
-    const entry = toEntry(ev);
+    const entry = toEntry(ev, lookupMember);
     if (entry) entries.push(entry);
   }
 

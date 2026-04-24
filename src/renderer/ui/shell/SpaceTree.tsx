@@ -6,6 +6,11 @@ import { AuthedImage } from '@/lib/mxc';
 import type { RoomSummary } from '@/state/rooms';
 import { getSpaceTree } from '@/lib/spaces';
 
+export function channelIconFor(room: RoomSummary) {
+  if (room.isVoice) return Volume2;
+  return Hash;
+}
+
 export function SpaceTree({
   space,
   rooms,
@@ -155,15 +160,55 @@ function RoomIcon({
   room: RoomSummary;
   client: MatrixClient | null;
 }) {
-  const Icon = room.isDirect ? Volume2 : room.isEncrypted ? Lock : Hash;
+  if (room.isDirect) {
+    return (
+      <span className="relative inline-flex h-5 w-5 shrink-0 items-center justify-center">
+        <AuthedImage
+          client={client}
+          mxc={room.dmAvatarMxc ?? room.avatarMxc}
+          width={28}
+          height={28}
+          className="h-5 w-5 rounded-full bg-[var(--color-surface)] object-cover"
+          fallback={<InitialBadge text={room.name} />}
+        />
+        {room.isEncrypted && <EncryptedBadge />}
+      </span>
+    );
+  }
+
+  const Icon = channelIconFor(room);
   return (
-    <AuthedImage
-      client={client}
-      mxc={room.avatarMxc}
-      width={28}
-      height={28}
-      className="h-5 w-5 rounded-full bg-[var(--color-surface)] object-cover"
-      fallback={<Icon className="h-4 w-4 text-[var(--color-text-faint)]" />}
-    />
+    <span className="relative inline-flex h-5 w-5 shrink-0 items-center justify-center">
+      <AuthedImage
+        client={client}
+        mxc={room.avatarMxc}
+        width={28}
+        height={28}
+        className="h-5 w-5 rounded-full bg-[var(--color-surface)] object-cover"
+        fallback={<Icon className="h-4 w-4 text-[var(--color-text-faint)]" />}
+      />
+      {room.isEncrypted && <EncryptedBadge />}
+    </span>
+  );
+}
+
+function EncryptedBadge() {
+  return (
+    <span
+      aria-label="Encrypted"
+      title="End-to-end encrypted"
+      className="absolute -bottom-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-[var(--color-panel)] text-emerald-500 ring-1 ring-[var(--color-panel)]"
+    >
+      <Lock className="h-2 w-2" strokeWidth={3} />
+    </span>
+  );
+}
+
+function InitialBadge({ text }: { text: string }) {
+  const initial = text.replace(/^[#@]/, '').charAt(0).toUpperCase() || '?';
+  return (
+    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-accent)] text-[10px] font-semibold text-white">
+      {initial}
+    </span>
   );
 }

@@ -14,13 +14,14 @@ interface MessageItemProps {
   showHeader?: boolean;
 }
 
-const QUICK_REACTIONS = ['👍', '❤️', '😂', '🎉', '🙏'];
-
 export function MessageItem({ entry, showHeader }: MessageItemProps) {
   const activeAccountId = useAccountsStore((s) => s.activeAccountId);
   const activeRoomId = useAccountsStore((s) => s.activeRoomId);
   const client = activeAccountId ? accountManager.getClient(activeAccountId) : null;
   const setThreadRoot = useUiStore((s) => s.setThreadRoot);
+  const quickReactions = useUiStore((s) => s.quickReactions);
+  const openLightbox = useUiStore((s) => s.openLightbox);
+  const openProfileCard = useUiStore((s) => s.openProfileCard);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(
     typeof (entry.content as { body?: string }).body === 'string'
@@ -71,10 +72,22 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
     hasMediaSource;
 
   const senderMxcAvatar = useMemo(() => {
+    if (entry.senderAvatarMxc) return entry.senderAvatarMxc;
     if (!client) return null;
     const room = activeRoomId ? client.getRoom(activeRoomId) : null;
     return room?.getMember(entry.sender)?.getMxcAvatarUrl() ?? null;
-  }, [client, activeRoomId, entry.sender]);
+  }, [client, activeRoomId, entry.sender, entry.senderAvatarMxc]);
+
+  function showProfileCardAt(ev: React.MouseEvent) {
+    if (!activeAccountId) return;
+    openProfileCard({
+      accountId: activeAccountId,
+      roomId: activeRoomId,
+      userId: entry.sender,
+      anchor: { x: ev.clientX + 12, y: ev.clientY - 40 },
+    });
+    ev.stopPropagation();
+  }
 
   async function onReact(key: string) {
     if (!client || !activeRoomId) return;
@@ -94,7 +107,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
   return (
     <div className={`group relative flex gap-3 ${showHeader ? '' : 'mt-0.5'} px-4 py-0.5 hover:bg-[var(--color-hover-overlay-subtle)]`}>
       <div className="absolute right-4 top-0 z-10 hidden -translate-y-1/2 items-center gap-1 rounded-md bg-[var(--color-panel)] p-1 shadow-md group-hover:flex">
-        {QUICK_REACTIONS.map((r) => (
+        {quickReactions.map((r) => (
           <button
             key={r}
             type="button"
@@ -159,14 +172,21 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
       </div>
       <div className="w-10 flex-shrink-0">
         {showHeader ? (
-          <AuthedImage
-            client={client}
-            mxc={senderMxcAvatar}
-            width={40}
-            height={40}
-            className="h-10 w-10 rounded-full bg-[var(--color-surface)]"
-            fallback={<div className="h-10 w-10 rounded-full bg-[var(--color-accent)]" />}
-          />
+          <button
+            type="button"
+            onClick={showProfileCardAt}
+            className="block h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+            aria-label={`Profile — ${entry.senderDisplayName}`}
+          >
+            <AuthedImage
+              client={client}
+              mxc={senderMxcAvatar}
+              width={40}
+              height={40}
+              className="h-10 w-10 rounded-full bg-[var(--color-surface)]"
+              fallback={<div className="h-10 w-10 rounded-full bg-[var(--color-accent)]" />}
+            />
+          </button>
         ) : (
           <span className="invisible select-none text-[10px] leading-[1.375rem] text-[var(--color-text-faint)] group-hover:visible">
             {formatTime24(entry.ts)}
@@ -177,7 +197,13 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
       <div className="min-w-0 flex-1">
         {showHeader && (
           <div className="flex items-baseline gap-2">
-            <span className="font-semibold text-[var(--color-text-strong)]">{entry.sender}</span>
+            <button
+              type="button"
+              onClick={showProfileCardAt}
+              className="font-semibold text-[var(--color-text-strong)] hover:underline"
+            >
+              {entry.senderDisplayName}
+            </button>
             <span className="text-[11px] text-[var(--color-text-faint)]">
               {formatTime24(entry.ts)}
             </span>
@@ -217,21 +243,35 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
             </div>
           </div>
         ) : isImage && client ? (
-          <AuthedImage
-            client={client}
-            mxc={content.file ? null : content.url}
-            file={content.file ?? null}
-            mimetype={content.info?.mimetype}
-            width={480}
-            height={320}
-            alt={content.body ?? ''}
-            style={{ maxWidth: 480, maxHeight: 320, borderRadius: 8 }}
-            fallback={
-              <span className="text-sm text-[var(--color-text-muted)]">
-                {content.body || 'image'}
-              </span>
+          <button
+            type="button"
+            onClick={() =>
+              openLightbox({
+                mxc: content.file ? null : content.url,
+                file: content.file ?? null,
+                mimetype: content.info?.mimetype,
+                alt: content.body ?? '',
+              })
             }
-          />
+            className="block cursor-zoom-in rounded"
+            title="Click to expand"
+          >
+            <AuthedImage
+              client={client}
+              mxc={content.file ? null : content.url}
+              file={content.file ?? null}
+              mimetype={content.info?.mimetype}
+              width={480}
+              height={320}
+              alt={content.body ?? ''}
+              style={{ maxWidth: 480, maxHeight: 320, borderRadius: 8 }}
+              fallback={
+                <span className="text-sm text-[var(--color-text-muted)]">
+                  {content.body || 'image'}
+                </span>
+              }
+            />
+          </button>
         ) : isFile && client ? (
           <FileDownloadLink
             client={client}

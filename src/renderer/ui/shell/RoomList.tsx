@@ -1,11 +1,12 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import type { MatrixClient } from 'matrix-js-sdk';
 import { useAccountsStore } from '@/state/accounts';
 import { useRoomsStore, type RoomSummary } from '@/state/rooms';
 import { accountManager } from '@/matrix/AccountManager';
-import { getOrphanRooms } from '@/lib/spaces';
+import { getOrphanRooms, getSpaceTree } from '@/lib/spaces';
 import { RoomRow, SpaceTree } from '@/ui/shell/SpaceTree';
 import { UserPanel } from '@/ui/shell/UserPanel';
+import { useUiStore, viewKeyFor } from '@/state/ui';
 
 const EMPTY_ROOMS: RoomSummary[] = [];
 
@@ -17,6 +18,8 @@ export function RoomList() {
     activeAccountId ? (s.byAccount[activeAccountId] ?? EMPTY_ROOMS) : EMPTY_ROOMS,
   );
   const setActiveRoom = useAccountsStore((s) => s.setActiveRoom);
+  const lastRoomByView = useUiStore((s) => s.lastRoomByView);
+  const rememberRoomForView = useUiStore((s) => s.rememberRoomForView);
   const client: MatrixClient | null =
     (activeAccountId ? accountManager.getClient(activeAccountId) : null) ?? null;
 
@@ -26,12 +29,39 @@ export function RoomList() {
     [allRooms, activeSpaceId],
   );
 
+  const homeRooms = useMemo(
+    () => (activeSpaceId ? [] : getHomeRooms(allRooms)),
+    [allRooms, activeSpaceId],
+  );
+
+  const viewKey = activeAccountId ? viewKeyFor(activeAccountId, activeSpaceId) : null;
+
+  // Pick a default room when entering a view that has none selected. Prefer
+  // the last-selected room for this view if it still exists; otherwise the
+  // first available room.
+  useEffect(() => {
+    if (!activeAccountId || !viewKey) return;
+    if (activeRoomId) return;
+    const candidateIds = activeSpace
+      ? flattenSpaceRoomIds(allRooms, activeSpace)
+      : homeRooms.map((r) => r.roomId);
+    if (candidateIds.length === 0) return;
+    const remembered = lastRoomByView[viewKey];
+    const pick =
+      remembered && candidateIds.includes(remembered) ? remembered : candidateIds[0];
+    setActiveRoom(pick);
+  }, [activeAccountId, viewKey, activeRoomId, activeSpace, allRooms, homeRooms, lastRoomByView, setActiveRoom]);
+
+  useEffect(() => {
+    if (viewKey && activeRoomId) rememberRoomForView(viewKey, activeRoomId);
+  }, [viewKey, activeRoomId, rememberRoomForView]);
+
   return (
     <aside
       className="flex h-full w-60 shrink-0 flex-col bg-[var(--color-panel)] text-sm"
       aria-label="Room list"
     >
-      <header className="flex h-12 items-center border-b border-[var(--color-divider)] px-4 font-semibold shadow-sm">
+      <header className="flex h-12 shrink-0 items-center border-b border-[var(--color-divider)] px-4 font-semibold shadow-sm">
         <span className="truncate">
           {activeSpace ? activeSpace.name : 'Direct Messages'}
         </span>
@@ -47,7 +77,7 @@ export function RoomList() {
           />
         ) : (
           <HomeView
-            rooms={allRooms}
+            rooms={homeRooms}
             activeRoomId={activeRoomId}
             onSelect={setActiveRoom}
             client={client}
@@ -57,6 +87,23 @@ export function RoomList() {
       <UserPanel />
     </aside>
   );
+}
+
+function getHomeRooms(rooms: RoomSummary[]): RoomSummary[] {
+  const dms = rooms.filter((r) => !r.isSpace && r.isDirect);
+  const orphans = getOrphanRooms(rooms);
+  const merged = [...dms, ...orphans];
+  merged.sort((a, b) => b.lastActivity - a.lastActivity);
+  return merged;
+}
+
+function flattenSpaceRoomIds(rooms: RoomSummary[], space: RoomSummary): string[] {
+  const tree = getSpaceTree(rooms, space.roomId);
+  const ids: string[] = tree.directRooms.map((r) => r.roomId);
+  for (const sub of tree.subspaces) {
+    for (const r of sub.rooms) ids.push(r.roomId);
+  }
+  return ids;
 }
 
 function HomeView({
@@ -70,13 +117,7 @@ function HomeView({
   onSelect: (roomId: string) => void;
   client: MatrixClient | null;
 }) {
-  const { dms, orphans } = useMemo(() => {
-    const dms = rooms.filter((r) => !r.isSpace && r.isDirect);
-    const orphans = getOrphanRooms(rooms);
-    return { dms, orphans };
-  }, [rooms]);
-
-  if (dms.length === 0 && orphans.length === 0) {
+  if (rooms.length === 0) {
     return (
       <p className="px-2 pt-4 text-xs italic text-[var(--color-text-faint)]">
         No direct messages yet.
@@ -85,49 +126,21 @@ function HomeView({
   }
 
   return (
-    <div className="space-y-3">
-      <GroupSection title="Direct messages" rooms={dms}>
-        {dms.map((r) => (
-          <RoomRow
-            key={r.roomId}
-            room={r}
-            active={r.roomId === activeRoomId}
-            onClick={() => onSelect(r.roomId)}
-            client={client}
-          />
-        ))}
-      </GroupSection>
-      <GroupSection title="Other rooms" rooms={orphans}>
-        {orphans.map((r) => (
-          <RoomRow
-            key={r.roomId}
-            room={r}
-            active={r.roomId === activeRoomId}
-            onClick={() => onSelect(r.roomId)}
-            client={client}
-          />
-        ))}
-      </GroupSection>
-    </div>
-  );
-}
-
-function GroupSection({
-  title,
-  rooms,
-  children,
-}: {
-  title: string;
-  rooms: RoomSummary[];
-  children: React.ReactNode;
-}) {
-  if (rooms.length === 0) return null;
-  return (
     <div>
       <div className="px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-        {title}
+        Direct messages
       </div>
-      <ul className="space-y-0.5">{children}</ul>
+      <ul className="space-y-0.5">
+        {rooms.map((r) => (
+          <RoomRow
+            key={r.roomId}
+            room={r}
+            active={r.roomId === activeRoomId}
+            onClick={() => onSelect(r.roomId)}
+            client={client}
+          />
+        ))}
+      </ul>
     </div>
   );
 }

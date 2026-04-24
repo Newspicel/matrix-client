@@ -15,47 +15,49 @@ export function UserPanel() {
 
   const client = activeAccountId ? accountManager.getClient(activeAccountId) : null;
 
-  const display = account?.displayName || account?.userId || 'Not signed in';
-  const subline = account?.userId ?? '';
+  const userId = account?.userId ?? '';
+  const mxLocalpart = userId.replace(/^@/, '').split(':')[0] ?? '';
+  const primary = account?.displayName?.trim() || mxLocalpart || 'Not signed in';
   const { color, label } = statusIndicator(account?.syncState);
 
   return (
-    <div className="flex h-12 shrink-0 items-center gap-2 border-t border-[var(--color-divider)] bg-[var(--color-panel-2)] px-2">
-      <div className="relative h-8 w-8 shrink-0">
-        <AuthedImage
-          client={client}
-          mxc={account?.avatarUrl}
-          width={32}
-          height={32}
-          className="h-8 w-8 rounded-full bg-[var(--color-surface)] object-cover"
-          fallback={<InitialBadge text={display} />}
-        />
-        <span
-          title={label}
-          className={cn(
-            'absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-[var(--color-panel-2)]',
-            color,
-          )}
-        />
-      </div>
-      <div className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-sm font-semibold text-[var(--color-text-strong)]">
-          {display}
-        </span>
-        {subline && account?.displayName && (
-          <span className="truncate text-[11px] text-[var(--color-text-muted)]">
-            {subline}
+    <div className="shrink-0 border-t border-[var(--color-divider)] p-4">
+      <div className="flex items-center gap-2 rounded-lg bg-[var(--color-panel-2)] px-2 py-1.5">
+        <div className="relative h-8 w-8 shrink-0">
+          <AuthedImage
+            client={client}
+            mxc={account?.avatarUrl}
+            width={32}
+            height={32}
+            className="h-8 w-8 rounded-full bg-[var(--color-surface)] object-cover"
+            fallback={<InitialBadge text={primary} />}
+          />
+          <span
+            title={label}
+            className={cn(
+              'absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-[var(--color-panel-2)]',
+              color,
+            )}
+          />
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col leading-tight">
+          <span className="truncate text-sm font-semibold text-[var(--color-text-strong)]">
+            {primary}
           </span>
-        )}
+          <span className="truncate text-[11px] text-[var(--color-text-muted)]">
+            {userId || 'Signed out'}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setSettingsOpen(true)}
+          title="User settings"
+          aria-label="User settings"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
+        >
+          <Settings className="h-4 w-4" />
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={() => setSettingsOpen(true)}
-        title="User settings"
-        className="rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
-      >
-        <Settings className="h-4 w-4" />
-      </button>
     </div>
   );
 }

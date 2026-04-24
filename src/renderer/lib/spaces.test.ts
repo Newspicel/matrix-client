@@ -12,6 +12,7 @@ function room(
     avatarMxc: null,
     isDirect: false,
     isSpace: false,
+    isVoice: false,
     isEncrypted: false,
     memberCount: 1,
     unread: 0,
@@ -19,6 +20,8 @@ function room(
     lastActivity: 0,
     parentSpaceIds: [],
     spaceChildIds: [],
+    dmUserId: null,
+    dmAvatarMxc: null,
     ...overrides,
   };
 }

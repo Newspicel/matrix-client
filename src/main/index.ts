@@ -6,6 +6,13 @@ import { registerNotificationHandlers } from './notifications.js';
 import { initTray } from './tray.js';
 import { handleDeepLinkUrl, registerDeepLinkProtocol } from './deep-link.js';
 
+// Dev-only: expose CDP on localhost so chrome-devtools-mcp can attach.
+// Must be set before app is ready.
+if (is.dev) {
+  app.commandLine.appendSwitch('remote-debugging-port', '9222');
+  app.commandLine.appendSwitch('remote-debugging-address', '127.0.0.1');
+}
+
 let mainWindow: BrowserWindow | null = null;
 
 function getMainWindow(): BrowserWindow | null {

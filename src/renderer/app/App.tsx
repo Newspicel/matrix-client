@@ -12,6 +12,8 @@ import { CallOverlay } from '@/ui/rtc/CallOverlay';
 import { ThreadPane } from '@/ui/timeline/ThreadPane';
 import { SettingsDialog } from '@/ui/settings/SettingsDialog';
 import { LoginAnotherDialog } from '@/ui/auth/LoginAnotherDialog';
+import { ImageLightbox } from '@/ui/timeline/ImageLightbox';
+import { ProfileCard } from '@/ui/shell/ProfileCard';
 
 export function App() {
   const [booting, setBooting] = useState(true);
@@ -45,6 +47,34 @@ export function App() {
     });
   }, []);
 
+  // Global Escape: close the topmost overlay, falling back to clearing the
+  // active room so the main pane returns to "Select a room".
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== 'Escape') return;
+      const ui = useUiStore.getState();
+      if (ui.lightbox) {
+        ui.closeLightbox();
+      } else if (ui.profileCard) {
+        ui.closeProfileCard();
+      } else if (ui.loginAnotherOpen) {
+        ui.setLoginAnotherOpen(false);
+      } else if (ui.settingsOpen) {
+        ui.setSettingsOpen(false);
+      } else if (ui.threadRootId) {
+        ui.setThreadRoot(null);
+      } else if (useAccountsStore.getState().activeRoomId) {
+        useAccountsStore.getState().setActiveRoom(null);
+      } else {
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   if (booting) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-[var(--color-bg)] text-sm text-[var(--color-text-muted)]">
@@ -66,6 +96,8 @@ export function App() {
         {memberListOpen && <MemberList />}
       </div>
       <CallOverlay />
+      <ImageLightbox />
+      <ProfileCard />
       {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
       {loginAnotherOpen && <LoginAnotherDialog onClose={() => setLoginAnotherOpen(false)} />}
     </div>

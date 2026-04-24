@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { MatrixEvent, Room, RoomMember, RoomState } from 'matrix-js-sdk';
 import { RoomStateEvent } from 'matrix-js-sdk';
 import { useAccountsStore } from '@/state/accounts';
+import { useUiStore } from '@/state/ui';
 import { accountManager } from '@/matrix/AccountManager';
 import { AuthedImage } from '@/lib/mxc';
 
@@ -32,6 +33,7 @@ interface MemberGroup {
 export function MemberList() {
   const activeAccountId = useAccountsStore((s) => s.activeAccountId);
   const activeRoomId = useAccountsStore((s) => s.activeRoomId);
+  const openProfileCard = useUiStore((s) => s.openProfileCard);
   const client = activeAccountId ? accountManager.getClient(activeAccountId) : null;
 
   const [members, setMembers] = useState<MemberView[]>([]);
@@ -90,7 +92,7 @@ export function MemberList() {
       className="hidden h-full w-60 shrink-0 flex-col bg-[var(--color-panel)] text-sm xl:flex"
       aria-label="Members"
     >
-      <header className="flex h-12 items-center border-b border-[var(--color-divider)] px-4 font-semibold text-[var(--color-text-muted)] shadow-sm">
+      <header className="flex h-12 shrink-0 items-center border-b border-[var(--color-divider)] px-4 font-semibold text-[var(--color-text-muted)] shadow-sm">
         Members{members.length > 0 ? ` — ${members.length}` : ''}
       </header>
       <div className="flex-1 overflow-y-auto p-2 text-[var(--color-text-muted)]">
@@ -113,7 +115,20 @@ export function MemberList() {
               <ul className="space-y-0.5">
                 {group.members.map((m) => (
                   <li key={m.userId}>
-                    <div
+                    <button
+                      type="button"
+                      onClick={(ev) => {
+                        if (!activeAccountId) return;
+                        openProfileCard({
+                          accountId: activeAccountId,
+                          roomId: activeRoomId,
+                          userId: m.userId,
+                          anchor: {
+                            x: ev.currentTarget.getBoundingClientRect().left - 296,
+                            y: ev.currentTarget.getBoundingClientRect().top - 20,
+                          },
+                        });
+                      }}
                       className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-[var(--color-text-muted)] hover:bg-[var(--color-panel-2)] hover:text-[var(--color-text-strong)]"
                       title={m.userId}
                     >
@@ -126,7 +141,7 @@ export function MemberList() {
                         fallback={<InitialBadge text={m.name} />}
                       />
                       <span className="flex-1 truncate">{m.name}</span>
-                    </div>
+                    </button>
                   </li>
                 ))}
               </ul>
