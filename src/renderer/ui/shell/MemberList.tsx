@@ -4,7 +4,7 @@ export function MemberList() {
       className="hidden h-full w-60 shrink-0 flex-col bg-[var(--color-panel)] text-sm xl:flex"
       aria-label="Members"
     >
-      <header className="flex h-12 items-center border-b border-[var(--color-divider)] px-4 font-semibold text-[var(--color-text-muted)] shadow-sm titlebar-drag">
+      <header className="flex h-12 items-center border-b border-[var(--color-divider)] px-4 font-semibold text-[var(--color-text-muted)] shadow-sm">
         Members
       </header>
       <div className="flex-1 overflow-y-auto p-2 text-[var(--color-text-muted)]">

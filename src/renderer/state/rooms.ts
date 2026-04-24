@@ -15,6 +15,7 @@ export interface RoomSummary {
   highlights: number;
   lastActivity: number;
   parentSpaceIds: string[];
+  spaceChildIds: string[];
 }
 
 interface RoomsState {
@@ -39,6 +40,15 @@ function summarize(room: Room, client: MatrixClient): RoomSummary {
     .map((e) => e.getStateKey())
     .filter((k): k is string => !!k);
 
+  const isSpace = room.isSpaceRoom();
+  const spaceChildIds = isSpace
+    ? room.currentState
+        .getStateEvents('m.space.child')
+        .filter((e) => Object.keys(e.getContent()).length > 0)
+        .map((e) => e.getStateKey())
+        .filter((k): k is string => !!k)
+    : [];
+
   const timeline = room.getLiveTimeline().getEvents();
   const lastEvent = timeline[timeline.length - 1];
 
@@ -48,13 +58,14 @@ function summarize(room: Room, client: MatrixClient): RoomSummary {
     avatarMxc: room.getMxcAvatarUrl(),
     topic,
     isDirect,
-    isSpace: room.isSpaceRoom(),
+    isSpace,
     isEncrypted: room.hasEncryptionStateEvent(),
     memberCount: room.getJoinedMemberCount(),
     unread: room.getUnreadNotificationCount(),
     highlights: room.getUnreadNotificationCount(NotificationCountType.Highlight),
     lastActivity: lastEvent?.getTs() ?? memberEvent?.events.member?.getTs() ?? 0,
     parentSpaceIds: parentSpaces,
+    spaceChildIds,
   };
 }
 

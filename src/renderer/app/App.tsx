@@ -3,6 +3,7 @@ import { ServerRail } from '@/ui/shell/ServerRail';
 import { RoomList } from '@/ui/shell/RoomList';
 import { MainPane } from '@/ui/shell/MainPane';
 import { MemberList } from '@/ui/shell/MemberList';
+import { TitleBar } from '@/ui/shell/TitleBar';
 import { LoginView } from '@/ui/auth/LoginView';
 import { accountManager } from '@/matrix/AccountManager';
 import { useAccountsStore } from '@/state/accounts';
@@ -55,12 +56,15 @@ export function App() {
   if (!hasAccounts) return <LoginView />;
 
   return (
-    <div className="flex h-full w-full select-none overflow-hidden bg-[var(--color-bg)] text-[var(--color-text)]">
-      <ServerRail />
-      <RoomList />
-      <MainPane />
-      <ThreadPane />
-      {memberListOpen && <MemberList />}
+    <div className="flex h-full w-full select-none flex-col overflow-hidden bg-[var(--color-bg)] text-[var(--color-text)]">
+      <TitleBar />
+      <div className="flex min-h-0 flex-1">
+        <ServerRail />
+        <RoomList />
+        <MainPane />
+        <ThreadPane />
+        {memberListOpen && <MemberList />}
+      </div>
       <CallOverlay />
       {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
       {loginAnotherOpen && <LoginAnotherDialog onClose={() => setLoginAnotherOpen(false)} />}

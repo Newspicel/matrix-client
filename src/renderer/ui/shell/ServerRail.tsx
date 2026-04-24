@@ -1,4 +1,4 @@
-import { Hash, Plus, Settings } from 'lucide-react';
+import { Home, Plus, Settings } from 'lucide-react';
 import type { MatrixClient } from 'matrix-js-sdk';
 import { cn } from '@/lib/utils';
 import { useAccountsStore } from '@/state/accounts';
@@ -6,11 +6,14 @@ import { useRoomsStore, type RoomSummary } from '@/state/rooms';
 import { useUiStore } from '@/state/ui';
 import { accountManager } from '@/matrix/AccountManager';
 import { mxcToHttp } from '@/lib/mxc';
+import { getTopLevelSpaces } from '@/lib/spaces';
 
 export function ServerRail() {
   const accounts = useAccountsStore((s) => s.accounts);
   const activeAccountId = useAccountsStore((s) => s.activeAccountId);
+  const activeSpaceId = useAccountsStore((s) => s.activeSpaceId);
   const setActiveAccount = useAccountsStore((s) => s.setActiveAccount);
+  const setActiveSpace = useAccountsStore((s) => s.setActiveSpace);
   const byAccount = useRoomsStore((s) => s.byAccount);
   const setSettingsOpen = useUiStore((s) => s.setSettingsOpen);
   const setLoginAnotherOpen = useUiStore((s) => s.setLoginAnotherOpen);
@@ -19,39 +22,56 @@ export function ServerRail() {
 
   return (
     <nav
-      className="flex h-full w-[72px] shrink-0 flex-col items-center gap-2 bg-[var(--color-rail)] py-3 titlebar-drag"
+      className="flex h-full w-[72px] shrink-0 flex-col items-center gap-2 bg-[var(--color-rail)] py-3"
       aria-label="Accounts and spaces"
     >
-      <div className="flex flex-1 flex-col items-center gap-2 overflow-y-auto titlebar-no-drag">
-        {accountList.map((account) => {
+      <div className="flex flex-1 flex-col items-center gap-2 overflow-y-auto">
+        {accountList.map((account, idx) => {
           const client = accountManager.getClient(account.id);
           if (!client) return null;
-          const spaces = (byAccount[account.id] ?? []).filter((r) => r.isSpace);
+          const accountRooms = byAccount[account.id] ?? [];
+          const topSpaces = getTopLevelSpaces(accountRooms);
+          const isActiveAccount = activeAccountId === account.id;
           return (
-            <AccountCluster
-              key={account.id}
-              accountId={account.id}
-              userId={account.userId}
-              displayName={account.displayName ?? account.userId}
-              client={client}
-              spaces={spaces}
-              active={activeAccountId === account.id}
-              onSelect={() => setActiveAccount(account.id)}
-            />
+            <div key={account.id} className="flex flex-col items-center gap-2">
+              {idx > 0 && <RailDivider />}
+              <HomeButton
+                displayName={account.displayName ?? account.userId}
+                active={isActiveAccount && activeSpaceId === null}
+                onClick={() => {
+                  setActiveAccount(account.id);
+                  setActiveSpace(null);
+                }}
+              />
+              {topSpaces.length > 0 && <RailDivider short />}
+              {topSpaces.map((space) => (
+                <SpaceButton
+                  key={space.roomId}
+                  space={space}
+                  client={client}
+                  active={isActiveAccount && activeSpaceId === space.roomId}
+                  onClick={() => {
+                    setActiveAccount(account.id);
+                    setActiveSpace(
+                      isActiveAccount && activeSpaceId === space.roomId ? null : space.roomId,
+                    );
+                  }}
+                />
+              ))}
+            </div>
           );
         })}
-        <RailButton
+        <RailDivider />
+        <RailIconButton
           label="Add account"
           onClick={() => setLoginAnotherOpen(true)}
-          variant="secondary"
           icon={<Plus className="h-5 w-5" />}
         />
       </div>
-      <div className="flex flex-col items-center gap-2 titlebar-no-drag">
-        <RailButton
+      <div className="flex flex-col items-center gap-2">
+        <RailIconButton
           label="Settings"
           onClick={() => setSettingsOpen(true)}
-          variant="secondary"
           icon={<Settings className="h-5 w-5" />}
         />
       </div>
@@ -59,99 +79,109 @@ export function ServerRail() {
   );
 }
 
-function AccountCluster({
-  accountId,
-  userId,
+function HomeButton({
   displayName,
-  client,
-  spaces,
   active,
-  onSelect,
+  onClick,
 }: {
-  accountId: string;
-  userId: string;
   displayName: string;
-  client: MatrixClient;
-  spaces: RoomSummary[];
   active: boolean;
-  onSelect: () => void;
+  onClick: () => void;
 }) {
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="relative flex items-center">
+      <ActivePill visible={active} />
       <button
         type="button"
-        onClick={onSelect}
-        title={displayName}
-        aria-label={displayName}
+        onClick={onClick}
+        title={`Direct messages (${displayName})`}
+        aria-label={`Home — direct messages for ${displayName}`}
         className={cn(
-          'group relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl transition-all duration-150 hover:rounded-xl',
+          'group flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-150 hover:rounded-xl',
           active
-            ? 'ring-2 ring-[var(--color-accent)]'
+            ? 'rounded-xl bg-[var(--color-accent)] text-white'
             : 'bg-[var(--color-panel)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent)] hover:text-white',
         )}
       >
-        <InitialBadge text={displayName || userId} />
+        <Home className="h-5 w-5" />
       </button>
-      {active &&
-        spaces.map((space) => (
-          <SpaceButton key={space.roomId} space={space} accountId={accountId} client={client} />
-        ))}
     </div>
   );
 }
 
 function SpaceButton({
   space,
-  accountId,
   client,
+  active,
+  onClick,
 }: {
   space: RoomSummary;
-  accountId: string;
   client: MatrixClient;
+  active: boolean;
+  onClick: () => void;
 }) {
-  const setActiveAccount = useAccountsStore((s) => s.setActiveAccount);
-  const setActiveSpace = useAccountsStore((s) => s.setActiveSpace);
-  const activeSpaceId = useAccountsStore((s) => s.activeSpaceId);
   const avatar = mxcToHttp(client, space.avatarMxc, 48, 48);
   return (
-    <button
-      type="button"
-      onClick={() => {
-        setActiveAccount(accountId);
-        setActiveSpace(activeSpaceId === space.roomId ? null : space.roomId);
-      }}
-      title={space.name}
-      className="group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-[var(--color-panel)] transition-all duration-150 hover:rounded-xl hover:bg-[var(--color-accent)]"
-    >
-      {avatar ? (
-        // eslint-disable-next-line jsx-a11y/alt-text
-        <img src={avatar} className="h-full w-full object-cover" />
-      ) : (
-        <Hash className="h-4 w-4 text-[var(--color-text-muted)]" />
-      )}
-    </button>
+    <div className="relative flex items-center">
+      <ActivePill visible={active} />
+      <button
+        type="button"
+        onClick={onClick}
+        title={space.name}
+        aria-label={space.name}
+        className={cn(
+          'group relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl transition-all duration-150 hover:rounded-xl',
+          active
+            ? 'rounded-xl ring-2 ring-[var(--color-accent)]'
+            : 'bg-[var(--color-panel)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent)] hover:text-white',
+        )}
+      >
+        {avatar ? (
+          // eslint-disable-next-line jsx-a11y/alt-text
+          <img src={avatar} className="h-full w-full object-cover" />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center font-semibold">
+            {initialFrom(space.name)}
+          </span>
+        )}
+      </button>
+    </div>
   );
 }
 
-function InitialBadge({ text }: { text: string }) {
-  const initial = text.replace(/^@/, '').charAt(0).toUpperCase();
+function ActivePill({ visible }: { visible: boolean }) {
   return (
-    <span className="flex h-full w-full items-center justify-center bg-[var(--color-accent)] font-semibold text-white">
-      {initial || '?'}
-    </span>
+    <span
+      aria-hidden
+      className={cn(
+        'absolute left-0 w-1 rounded-r bg-[var(--color-text-strong)] transition-all duration-150',
+        visible ? 'h-8' : 'h-0',
+      )}
+      style={{ transform: 'translateX(-12px)' }}
+    />
   );
 }
 
-function RailButton({
+function RailDivider({ short = false }: { short?: boolean }) {
+  return (
+    <div
+      aria-hidden
+      className={cn(
+        'mx-auto rounded-full bg-[var(--color-divider)]',
+        short ? 'h-px w-6 opacity-60' : 'h-0.5 w-8',
+      )}
+    />
+  );
+}
+
+function RailIconButton({
   label,
   onClick,
   icon,
-  variant = 'primary',
 }: {
   label: string;
   onClick: () => void;
   icon: React.ReactNode;
-  variant?: 'primary' | 'secondary';
 }) {
   return (
     <button
@@ -159,14 +189,13 @@ function RailButton({
       onClick={onClick}
       title={label}
       aria-label={label}
-      className={cn(
-        'flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-150 hover:rounded-xl',
-        variant === 'secondary'
-          ? 'bg-[var(--color-rail-hover)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent)] hover:text-white'
-          : 'bg-[var(--color-panel)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent)] hover:text-white',
-      )}
+      className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-rail-hover)] text-[var(--color-text-muted)] transition-all duration-150 hover:rounded-xl hover:bg-[var(--color-accent)] hover:text-white"
     >
       {icon}
     </button>
   );
+}
+
+function initialFrom(name: string): string {
+  return name.replace(/^[#@]/, '').charAt(0).toUpperCase() || '?';
 }

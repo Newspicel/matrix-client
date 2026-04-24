@@ -29,6 +29,9 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
+    ...(process.platform === 'darwin' && {
+      trafficLightPosition: { x: 16, y: 14 },
+    }),
     backgroundColor: currentChromeBg(),
     webPreferences: {
       preload: join(__dirname, '../preload/index.mjs'),

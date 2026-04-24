@@ -28,19 +28,21 @@ export function MainPane() {
 
   return (
     <section className="flex h-full flex-1 flex-col bg-[var(--color-panel-2)]">
-      <header className="flex h-12 items-center gap-2 border-b border-[var(--color-divider)] px-4 shadow-sm titlebar-drag">
-        <div className="flex flex-1 items-center gap-2 titlebar-no-drag">
+      <header className="flex h-12 items-center gap-2 border-b border-[var(--color-divider)] px-4 shadow-sm">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           {room?.isEncrypted ? (
             <Lock className="h-5 w-5 text-emerald-500" />
           ) : (
             <Hash className="h-5 w-5 text-[var(--color-text-muted)]" />
           )}
-          <h1 className="font-semibold">{room?.name ?? 'Select a room'}</h1>
+          <h1 className="truncate font-semibold">{room?.name ?? 'Select a room'}</h1>
           {room?.topic && (
-            <span className="ml-2 truncate text-xs text-[var(--color-text-muted)]">— {room.topic}</span>
+            <span className="ml-2 truncate text-xs text-[var(--color-text-muted)]">
+              — {room.topic}
+            </span>
           )}
         </div>
-        <div className="flex items-center gap-2 titlebar-no-drag">
+        <div className="flex items-center gap-1">
           {room && (
             <button
               type="button"

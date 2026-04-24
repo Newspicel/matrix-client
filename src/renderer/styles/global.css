@@ -107,3 +107,17 @@ body {
 .titlebar-no-drag {
   -webkit-app-region: no-drag;
 }
+
+/* Unified top drag strip. Used on macOS so the traffic lights sit in a
+   dedicated 44px row that doesn't overlap any real UI. Children get
+   no-drag by default so they remain clickable. */
+.titlebar-strip {
+  -webkit-app-region: drag;
+  height: 44px;
+  flex-shrink: 0;
+}
+.titlebar-strip button,
+.titlebar-strip a,
+.titlebar-strip input {
+  -webkit-app-region: no-drag;
+}
