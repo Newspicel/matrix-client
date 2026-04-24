@@ -5,7 +5,7 @@ import { sanitizeEventHtml } from '@/lib/markdown';
 import { useAccountsStore } from '@/state/accounts';
 import { useUiStore } from '@/state/ui';
 import { accountManager } from '@/matrix/AccountManager';
-import { AuthedImage, useAuthedMedia } from '@/lib/mxc';
+import { AuthedImage, useAuthedMedia, useAuthedEncryptedMedia, type EncryptedFile } from '@/lib/mxc';
 import { redactEvent, sendReaction, sendEdit } from '@/matrix/messageOps';
 import { PollView, isPollStartType } from './Poll';
 
@@ -36,30 +36,39 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
     format?: string;
     formatted_body?: string;
     url?: string;
+    file?: EncryptedFile;
+    info?: { mimetype?: string };
   };
+
+  const isPendingDecryption =
+    entry.type === 'm.room.encrypted' && !entry.isDecryptionFailure && !entry.isRedacted;
 
   const renderedHtml = useMemo(() => {
     if (entry.isRedacted)
       return '<em style="color: var(--color-text-faint)">[redacted]</em>';
     if (entry.isDecryptionFailure)
       return '<em class="text-amber-400">[unable to decrypt]</em>';
+    if (isPendingDecryption)
+      return '<em style="color: var(--color-text-faint)">decrypting…</em>';
 
     if (content.format === 'org.matrix.custom.html' && content.formatted_body) {
       return sanitizeEventHtml(content.formatted_body);
     }
     return escapeHtml(content.body ?? '');
-  }, [entry.isRedacted, entry.isDecryptionFailure, content.format, content.formatted_body, content.body]);
+  }, [entry.isRedacted, entry.isDecryptionFailure, isPendingDecryption, content.format, content.formatted_body, content.body]);
 
+  const hasMediaSource =
+    typeof content.url === 'string' || typeof content.file?.url === 'string';
   const isImage =
     !entry.isRedacted &&
     !entry.isDecryptionFailure &&
-    content.msgtype === 'm.image' &&
-    typeof content.url === 'string';
+    (content.msgtype === 'm.image' || entry.type === 'm.sticker') &&
+    hasMediaSource;
   const isFile =
     !entry.isRedacted &&
     !entry.isDecryptionFailure &&
     content.msgtype === 'm.file' &&
-    typeof content.url === 'string';
+    hasMediaSource;
 
   const senderMxcAvatar = useMemo(() => {
     if (!client) return null;
@@ -83,7 +92,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
   }
 
   return (
-    <div className={`group relative flex gap-3 ${showHeader ? 'mt-2' : 'mt-0.5'} px-2 py-0.5 hover:bg-[var(--color-hover-overlay-subtle)]`}>
+    <div className={`group relative flex gap-3 ${showHeader ? '' : 'mt-0.5'} px-4 py-0.5 hover:bg-[var(--color-hover-overlay-subtle)]`}>
       <div className="absolute right-4 top-0 z-10 hidden -translate-y-1/2 items-center gap-1 rounded-md bg-[var(--color-panel)] p-1 shadow-md group-hover:flex">
         {QUICK_REACTIONS.map((r) => (
           <button
@@ -159,8 +168,8 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
             fallback={<div className="h-10 w-10 rounded-full bg-[var(--color-accent)]" />}
           />
         ) : (
-          <span className="invisible select-none text-[10px] text-[var(--color-text-faint)] group-hover:visible">
-            {new Date(entry.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          <span className="invisible select-none text-[10px] leading-[1.375rem] text-[var(--color-text-faint)] group-hover:visible">
+            {formatTime24(entry.ts)}
           </span>
         )}
       </div>
@@ -169,8 +178,8 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
         {showHeader && (
           <div className="flex items-baseline gap-2">
             <span className="font-semibold text-[var(--color-text-strong)]">{entry.sender}</span>
-            <span className="text-xs text-[var(--color-text-faint)]">
-              {new Date(entry.ts).toLocaleString()}
+            <span className="text-[11px] text-[var(--color-text-faint)]">
+              {formatTime24(entry.ts)}
             </span>
             {entry.isEncrypted && <Lock className="h-3 w-3 text-emerald-500" />}
           </div>
@@ -210,14 +219,27 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
         ) : isImage && client ? (
           <AuthedImage
             client={client}
-            mxc={content.url}
+            mxc={content.file ? null : content.url}
+            file={content.file ?? null}
+            mimetype={content.info?.mimetype}
             width={480}
             height={320}
             alt={content.body ?? ''}
             style={{ maxWidth: 480, maxHeight: 320, borderRadius: 8 }}
+            fallback={
+              <span className="text-sm text-[var(--color-text-muted)]">
+                {content.body || 'image'}
+              </span>
+            }
           />
         ) : isFile && client ? (
-          <FileDownloadLink client={client} mxc={content.url!} label={content.body ?? 'file'} />
+          <FileDownloadLink
+            client={client}
+            mxc={content.file ? null : (content.url ?? null)}
+            file={content.file ?? null}
+            mimetype={content.info?.mimetype}
+            label={content.body ?? 'file'}
+          />
         ) : (
           <div
             className="prose dark:prose-invert max-w-none text-sm leading-relaxed text-[var(--color-text)] [&_a]:text-sky-400 [&_code]:rounded [&_code]:bg-[var(--color-code-bg)] [&_code]:px-1"
@@ -249,19 +271,30 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
 function FileDownloadLink({
   client,
   mxc,
+  file,
+  mimetype,
   label,
 }: {
   client: NonNullable<ReturnType<typeof accountManager.getClient>>;
-  mxc: string;
+  mxc: string | null;
+  file: EncryptedFile | null;
+  mimetype?: string;
   label: string;
 }) {
-  const url = useAuthedMedia(client, mxc);
+  const plainUrl = useAuthedMedia(client, file ? null : mxc);
+  const encUrl = useAuthedEncryptedMedia(client, file, mimetype);
+  const url = file ? encUrl : plainUrl;
   if (!url) return <span className="text-[var(--color-text-muted)]">{label}</span>;
   return (
     <a href={url} download={label} target="_blank" rel="noopener" className="text-sky-400">
       {label}
     </a>
   );
+}
+
+function formatTime24(ts: number): string {
+  const d = new Date(ts);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
 function escapeHtml(s: string): string {

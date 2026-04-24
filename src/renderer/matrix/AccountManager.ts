@@ -1,5 +1,5 @@
-import type { MatrixClient } from 'matrix-js-sdk';
-import { ClientEvent, RoomEvent, SyncState } from 'matrix-js-sdk';
+import type { MatrixClient, MatrixEvent } from 'matrix-js-sdk';
+import { ClientEvent, MatrixEventEvent, RoomEvent, SyncState } from 'matrix-js-sdk';
 import type { AccountMetadata } from '@shared/types';
 import { buildMatrixClient, type ClientCredentials } from './createClient';
 import { buildSecretStorageCallbacks, forgetAccountSecrets } from './secretStorage';
@@ -97,8 +97,9 @@ class AccountManager {
     });
 
     client.on(RoomEvent.Timeline, (event, room, toStartOfTimeline) => {
-      if (!room || toStartOfTimeline) return;
+      if (!room) return;
       useTimelineStore.getState().onTimelineAppend(metadata.id, room.roomId, client);
+      if (toStartOfTimeline) return;
       useRoomsStore.getState().refreshRooms(metadata.id, client);
       maybeNotify(metadata.id, client, event, room);
     });
@@ -110,6 +111,15 @@ class AccountManager {
 
     client.on(RoomEvent.LocalEchoUpdated, (_event, room) => {
       useTimelineStore.getState().onTimelineAppend(metadata.id, room.roomId, client);
+    });
+
+    // Backfilled/live E2EE events arrive first in `m.room.encrypted` form and
+    // are decrypted asynchronously. Refresh the timeline once the clear content
+    // is available so the message body actually renders.
+    client.on(MatrixEventEvent.Decrypted, (event: MatrixEvent) => {
+      const roomId = event.getRoomId();
+      if (!roomId) return;
+      useTimelineStore.getState().onTimelineAppend(metadata.id, roomId, client);
     });
 
     await client.startClient({
