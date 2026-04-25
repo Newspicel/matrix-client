@@ -2,6 +2,8 @@ import { useRtcStore } from '@/state/rtc';
 import { leaveCall, toggleCamera, toggleMicrophone, toggleScreenShare } from '@/matrix/rtc/controls';
 import { Mic, MicOff, Monitor, PhoneOff, Video, VideoOff } from 'lucide-react';
 import { TileGrid } from './TileGrid';
+import { Button } from '@/ui/primitives/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/primitives/tooltip';
 
 /**
  * Floating call window shown when a MatrixRTC session is active.
@@ -20,10 +22,25 @@ export function CallOverlay() {
         <TileGrid />
       </div>
       <footer className="flex items-center justify-center gap-3 border-t border-[var(--color-divider)] p-3">
-        <CallButton onClick={toggleMicrophone} active={!call.micMuted} icon={call.micMuted ? MicOff : Mic} />
-        <CallButton onClick={toggleCamera} active={call.cameraOn} icon={call.cameraOn ? Video : VideoOff} />
-        <CallButton onClick={toggleScreenShare} active={call.screenSharing} icon={Monitor} />
-        <CallButton onClick={leaveCall} active={false} icon={PhoneOff} variant="danger" />
+        <CallButton
+          onClick={toggleMicrophone}
+          active={!call.micMuted}
+          icon={call.micMuted ? MicOff : Mic}
+          label={call.micMuted ? 'Unmute' : 'Mute'}
+        />
+        <CallButton
+          onClick={toggleCamera}
+          active={call.cameraOn}
+          icon={call.cameraOn ? Video : VideoOff}
+          label={call.cameraOn ? 'Stop video' : 'Start video'}
+        />
+        <CallButton
+          onClick={toggleScreenShare}
+          active={call.screenSharing}
+          icon={Monitor}
+          label={call.screenSharing ? 'Stop sharing' : 'Share screen'}
+        />
+        <CallButton onClick={leaveCall} active={false} icon={PhoneOff} variant="danger" label="Leave call" />
       </footer>
     </div>
   );
@@ -34,25 +51,34 @@ function CallButton({
   active,
   icon: Icon,
   variant = 'default',
+  label,
 }: {
   onClick: () => void;
   active: boolean;
   icon: React.ComponentType<{ className?: string }>;
   variant?: 'default' | 'danger';
+  label: string;
 }) {
   const color =
     variant === 'danger'
       ? 'bg-red-600 hover:bg-red-500 text-white'
       : active
-        ? 'bg-[var(--color-accent)] text-white'
+        ? 'bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)]'
         : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-panel)]';
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex h-10 w-10 items-center justify-center rounded-full ${color}`}
-    >
-      <Icon className="h-5 w-5" />
-    </button>
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            onClick={onClick}
+            aria-label={label}
+            className={`h-10 w-10 rounded-full p-0 ${color}`}
+          />
+        }
+      >
+        <Icon className="h-5 w-5" />
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
   );
 }

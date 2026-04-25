@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
 
 /* Design tokens. Defaults are the dark theme; the light override below
    rebinds the same variables under `prefers-color-scheme: light`, so every
@@ -27,6 +28,33 @@
 
   --color-scrollbar-thumb: #3a3a42;
   --color-scrollbar-thumb-hover: #4a4a54;
+
+  /* shadcn-style semantic aliases. The primitives layer (src/renderer/ui/primitives)
+     references these names so generated/migrated shadcn recipes work unchanged.
+     App code keeps using the --color-* names directly. */
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-text);
+  --color-card: var(--color-panel);
+  --color-card-foreground: var(--color-text);
+  --color-popover: var(--color-panel-2);
+  --color-popover-foreground: var(--color-text);
+  --color-primary: var(--color-accent);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: var(--color-panel-2);
+  --color-secondary-foreground: var(--color-text);
+  --color-muted: var(--color-surface);
+  --color-muted-foreground: var(--color-text-muted);
+  --color-accent-muted: var(--color-hover-overlay);
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+  --color-border: var(--color-divider);
+  --color-input: var(--color-divider);
+  --color-ring: var(--color-accent);
+  --radius: 0.5rem;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
 :root {

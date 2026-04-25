@@ -9,6 +9,8 @@ import {
 import { accountManager } from '@/matrix/AccountManager';
 import type { AccountMetadata } from '@shared/types';
 import type { ClientCredentials } from '@/matrix/createClient';
+import { Button } from '@/ui/primitives/button';
+import { Input } from '@/ui/primitives/input';
 
 export function LoginView() {
   const [homeserver, setHomeserver] = useState('matrix.org');
@@ -107,45 +109,38 @@ export function LoginView() {
         <label className="block text-sm">
           <span className="mb-1 block font-medium text-[var(--color-text)]">Homeserver</span>
           <div className="flex gap-2">
-            <input
+            <Input
               value={homeserver}
               onChange={(e) => {
                 setHomeserver(e.target.value);
                 setFlows(null);
               }}
               placeholder="matrix.org or https://your.server"
-              className="flex-1 rounded-md bg-[var(--color-surface)] px-3 py-2 text-[var(--color-text)] outline-none ring-1 ring-transparent focus:ring-[var(--color-accent)]"
               autoComplete="url"
               required
             />
-            <button
-              type="button"
-              onClick={onDiscoverFlows}
-              className="rounded-md bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-panel-2)]"
-            >
+            <Button type="button" variant="secondary" onClick={onDiscoverFlows}>
               Continue
-            </button>
+            </Button>
           </div>
         </label>
 
         <label className="block text-sm">
           <span className="mb-1 block font-medium text-[var(--color-text)]">Username</span>
-          <input
+          <Input
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="you or @you:example.org"
-            className="w-full rounded-md bg-[var(--color-surface)] px-3 py-2 text-[var(--color-text)] outline-none ring-1 ring-transparent focus:ring-[var(--color-accent)]"
             autoComplete="username"
           />
         </label>
 
         <label className="block text-sm">
           <span className="mb-1 block font-medium text-[var(--color-text)]">Password</span>
-          <input
+          <Input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md bg-[var(--color-surface)] px-3 py-2 text-[var(--color-text)] outline-none ring-1 ring-transparent focus:ring-[var(--color-accent)]"
             autoComplete="current-password"
           />
         </label>
@@ -154,13 +149,14 @@ export function LoginView() {
           <div className="rounded-md bg-red-900/40 px-3 py-2 text-sm text-red-200">{error}</div>
         )}
 
-        <button
+        <Button
           type="submit"
           disabled={submitting || !username || !password}
-          className="w-full rounded-md bg-[var(--color-accent)] px-4 py-2 font-semibold text-white transition-colors hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
+          size="lg"
+          className="w-full"
         >
           {submitting ? 'Signing in…' : 'Sign in with password'}
-        </button>
+        </Button>
 
         {(flows?.providers.length ?? 0) > 0 && (
           <div className="space-y-2 border-t border-[var(--color-divider)] pt-3 text-sm">
@@ -168,26 +164,28 @@ export function LoginView() {
               Single sign-on
             </div>
             {flows!.providers.map((p) => (
-              <button
+              <Button
                 key={p.id}
                 type="button"
+                variant="secondary"
                 onClick={() => onSsoLogin(p.id)}
-                className="flex w-full items-center justify-center gap-2 rounded-md bg-[var(--color-surface)] px-3 py-2 text-[var(--color-text)] hover:bg-[var(--color-panel-2)]"
+                className="w-full"
               >
                 {p.name ?? p.id}
-              </button>
+              </Button>
             ))}
           </div>
         )}
 
         {flows?.hasPlainSso && (flows?.providers.length ?? 0) === 0 && (
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={() => onSsoLogin()}
-            className="w-full rounded-md bg-[var(--color-surface)] px-4 py-2 text-[var(--color-text)] hover:bg-[var(--color-panel-2)]"
+            className="w-full"
           >
             Continue with SSO
-          </button>
+          </Button>
         )}
       </form>
     </div>

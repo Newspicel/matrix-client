@@ -8,6 +8,7 @@ import { accountManager } from '@/matrix/AccountManager';
 import { AuthedImage } from '@/lib/mxc';
 import { getTopLevelSpaces } from '@/lib/spaces';
 import type { AccountMetadata } from '@shared/types';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/primitives/tooltip';
 
 interface AccountNotifs {
   unread: number;
@@ -97,6 +98,15 @@ export function ServerRail() {
   );
 }
 
+function RailTooltip({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<span className="inline-block" />}>{children}</TooltipTrigger>
+      <TooltipContent side="right">{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
 function HomeButton({
   account,
   active,
@@ -109,20 +119,21 @@ function HomeButton({
   const label = `Direct messages (${account.displayName ?? account.userId})`;
   return (
     <RailItem active={active}>
-      <button
-        type="button"
-        onClick={onClick}
-        title={label}
-        aria-label={label}
-        className={cn(
-          'group flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-150 hover:rounded-xl',
-          active
-            ? 'rounded-xl bg-[var(--color-accent)] text-white'
-            : 'bg-[var(--color-panel)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent)] hover:text-white',
-        )}
-      >
-        <Home className="h-5 w-5" />
-      </button>
+      <RailTooltip label={label}>
+        <button
+          type="button"
+          onClick={onClick}
+          aria-label={label}
+          className={cn(
+            'group flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-150 hover:rounded-xl',
+            active
+              ? 'rounded-xl bg-[var(--color-accent)] text-white'
+              : 'bg-[var(--color-panel)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent)] hover:text-white',
+          )}
+        >
+          <Home className="h-5 w-5" />
+        </button>
+      </RailTooltip>
     </RailItem>
   );
 }
@@ -141,31 +152,32 @@ function SpaceButton({
   const hasNotif = space.highlights > 0 || space.unread > 0;
   return (
     <RailItem active={active} unread={hasNotif && !active}>
-      <button
-        type="button"
-        onClick={onClick}
-        title={space.name}
-        aria-label={space.name}
-        className={cn(
-          'group relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl transition-all duration-150 hover:rounded-xl',
-          active
-            ? 'rounded-xl ring-2 ring-inset ring-[var(--color-accent)]'
-            : 'bg-[var(--color-panel)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent)] hover:text-white',
-        )}
-      >
-        <AuthedImage
-          client={client}
-          mxc={space.avatarMxc}
-          width={48}
-          height={48}
-          className="h-full w-full object-cover"
-          fallback={
-            <span className="flex h-full w-full items-center justify-center font-semibold">
-              {initialFrom(space.name)}
-            </span>
-          }
-        />
-      </button>
+      <RailTooltip label={space.name}>
+        <button
+          type="button"
+          onClick={onClick}
+          aria-label={space.name}
+          className={cn(
+            'group relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl transition-all duration-150 hover:rounded-xl',
+            active
+              ? 'rounded-xl ring-2 ring-inset ring-[var(--color-accent)]'
+              : 'bg-[var(--color-panel)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent)] hover:text-white',
+          )}
+        >
+          <AuthedImage
+            client={client}
+            mxc={space.avatarMxc}
+            width={48}
+            height={48}
+            className="h-full w-full object-cover"
+            fallback={
+              <span className="flex h-full w-full items-center justify-center font-semibold">
+                {initialFrom(space.name)}
+              </span>
+            }
+          />
+        </button>
+      </RailTooltip>
       {space.highlights > 0 && <RailHighlightBadge count={space.highlights} />}
     </RailItem>
   );
@@ -186,26 +198,27 @@ function AccountButton({
   const label = account.displayName ?? account.userId;
   return (
     <RailItem active={false} unread={hasUnread}>
-      <button
-        type="button"
-        onClick={onClick}
-        title={`Switch to ${label}`}
-        aria-label={`Switch to ${label}`}
-        className="group relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-[var(--color-panel)] text-[var(--color-text-muted)] transition-all duration-150 hover:rounded-xl hover:bg-[var(--color-accent)] hover:text-white"
-      >
-        <AuthedImage
-          client={client}
-          mxc={account.avatarUrl}
-          width={48}
-          height={48}
-          className="h-full w-full object-cover"
-          fallback={
-            <span className="flex h-full w-full items-center justify-center text-sm font-semibold text-white">
-              {initialFrom(label)}
-            </span>
-          }
-        />
-      </button>
+      <RailTooltip label={`Switch to ${label}`}>
+        <button
+          type="button"
+          onClick={onClick}
+          aria-label={`Switch to ${label}`}
+          className="group relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-[var(--color-panel)] text-[var(--color-text-muted)] transition-all duration-150 hover:rounded-xl hover:bg-[var(--color-accent)] hover:text-white"
+        >
+          <AuthedImage
+            client={client}
+            mxc={account.avatarUrl}
+            width={48}
+            height={48}
+            className="h-full w-full object-cover"
+            fallback={
+              <span className="flex h-full w-full items-center justify-center text-sm font-semibold text-white">
+                {initialFrom(label)}
+              </span>
+            }
+          />
+        </button>
+      </RailTooltip>
       {notifs.highlights > 0 && <RailHighlightBadge count={notifs.highlights} />}
     </RailItem>
   );
@@ -263,15 +276,16 @@ function RailIconButton({
   icon: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={label}
-      aria-label={label}
-      className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-rail-hover)] text-[var(--color-text-muted)] transition-all duration-150 hover:rounded-xl hover:bg-[var(--color-accent)] hover:text-white"
-    >
-      {icon}
-    </button>
+    <RailTooltip label={label}>
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={label}
+        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-rail-hover)] text-[var(--color-text-muted)] transition-all duration-150 hover:rounded-xl hover:bg-[var(--color-accent)] hover:text-white"
+      >
+        {icon}
+      </button>
+    </RailTooltip>
   );
 }
 

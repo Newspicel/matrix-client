@@ -6,6 +6,8 @@ import { useAccountsStore } from '@/state/accounts';
 import { useUiStore } from '@/state/ui';
 import { accountManager } from '@/matrix/AccountManager';
 import { AuthedImage } from '@/lib/mxc';
+import { Button } from '@/ui/primitives/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/primitives/tooltip';
 
 export function UserPanel() {
   const activeAccountId = useAccountsStore((s) => s.activeAccountId);
@@ -54,15 +56,21 @@ export function UserPanel() {
           {userId || 'Signed out'}
         </span>
       </div>
-      <button
-        type="button"
-        onClick={() => setSettingsOpen(true)}
-        title="User settings"
-        aria-label="User settings"
-        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
-      >
-        <Settings className="h-4 w-4" />
-      </button>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setSettingsOpen(true)}
+              aria-label="User settings"
+            />
+          }
+        >
+          <Settings className="h-4 w-4" />
+        </TooltipTrigger>
+        <TooltipContent>User settings</TooltipContent>
+      </Tooltip>
     </div>
   );
 }

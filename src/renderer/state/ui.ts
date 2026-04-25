@@ -36,6 +36,9 @@ interface UiState {
   loginAnotherOpen: boolean;
   setLoginAnotherOpen: (open: boolean) => void;
 
+  commandPaletteOpen: boolean;
+  setCommandPaletteOpen: (open: boolean) => void;
+
   lightbox: LightboxImage | null;
   openLightbox: (image: LightboxImage) => void;
   closeLightbox: () => void;
@@ -70,6 +73,9 @@ export const useUiStore = create<UiState>()(
 
       loginAnotherOpen: false,
       setLoginAnotherOpen: (open) => set({ loginAnotherOpen: open }),
+
+      commandPaletteOpen: false,
+      setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),
 
       lightbox: null,
       openLightbox: (image) => set({ lightbox: image }),

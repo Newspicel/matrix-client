@@ -9,6 +9,8 @@ import type { TimelineEntry } from '@/state/timeline';
 import { MessageItem } from './Message';
 import type { RoomMessageEventContent } from 'matrix-js-sdk/lib/@types/events';
 import { composeTextContent } from '@/lib/markdown';
+import { Button } from '@/ui/primitives/button';
+import { Textarea } from '@/ui/primitives/textarea';
 
 export function ThreadPane() {
   const threadRootId = useUiStore((s) => s.threadRootId);
@@ -68,13 +70,14 @@ export function ThreadPane() {
     <aside className="flex h-full w-96 shrink-0 flex-col border-l border-[var(--color-divider)] bg-[var(--color-panel)]">
       <header className="flex h-12 items-center justify-between border-b border-[var(--color-divider)] px-4 font-semibold">
         Thread
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={() => close(null)}
-          className="rounded p-1 hover:bg-[var(--color-hover-overlay)]"
+          aria-label="Close thread"
         >
           <X className="h-4 w-4" />
-        </button>
+        </Button>
       </header>
       <div className="flex-1 overflow-y-auto px-2 py-3">
         {entries.map((entry, i) => (
@@ -86,7 +89,7 @@ export function ThreadPane() {
         ))}
       </div>
       <div className="border-t border-[var(--color-divider)] p-3">
-        <textarea
+        <Textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
@@ -97,7 +100,7 @@ export function ThreadPane() {
           }}
           placeholder="Reply in thread"
           rows={1}
-          className="max-h-32 w-full resize-none rounded-md bg-[var(--color-surface)] px-3 py-2 text-sm outline-none"
+          className="max-h-32"
         />
       </div>
     </aside>

@@ -5,6 +5,8 @@ import { accountManager } from '@/matrix/AccountManager';
 import { useAccountsStore } from '@/state/accounts';
 import { composeTextContent } from '@/lib/markdown';
 import { uploadAndSendFile } from '@/matrix/attachments';
+import { Button } from '@/ui/primitives/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/primitives/tooltip';
 
 interface PendingAttachment {
   id: string;
@@ -128,23 +130,29 @@ export function Composer() {
           </div>
         )}
         <div className="flex items-center gap-2">
-          <label
-            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[var(--color-text-muted)] ${
-              disabled
-                ? 'cursor-not-allowed'
-                : 'cursor-pointer hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text)]'
-            }`}
-            title="Attach file"
-          >
-            <Paperclip className="h-5 w-5" />
-            <input
-              type="file"
-              multiple
-              className="hidden"
-              onChange={onFileChange}
-              disabled={disabled}
-            />
-          </label>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <label
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[var(--color-text-muted)] ${
+                    disabled
+                      ? 'cursor-not-allowed'
+                      : 'cursor-pointer hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text)]'
+                  }`}
+                />
+              }
+            >
+              <Paperclip className="h-5 w-5" />
+              <input
+                type="file"
+                multiple
+                className="hidden"
+                onChange={onFileChange}
+                disabled={disabled}
+              />
+            </TooltipTrigger>
+            <TooltipContent>Attach file</TooltipContent>
+          </Tooltip>
           <textarea
             ref={textareaRef}
             value={value}
@@ -156,20 +164,22 @@ export function Composer() {
             rows={1}
             className="max-h-40 flex-1 resize-none self-center bg-transparent py-1 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-faint)] disabled:cursor-not-allowed"
           />
-          <button
-            type="button"
-            onClick={send}
-            disabled={!canSend}
-            aria-label="Send message"
-            title="Send"
-            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors ${
-              canSend
-                ? 'bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)]'
-                : 'bg-transparent text-[var(--color-text-faint)]'
-            }`}
-          >
-            <SendHorizontal className="h-4 w-4" />
-          </button>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  onClick={send}
+                  disabled={!canSend}
+                  variant={canSend ? 'default' : 'ghost'}
+                  size="icon-sm"
+                  aria-label="Send message"
+                />
+              }
+            >
+              <SendHorizontal className="h-4 w-4" />
+            </TooltipTrigger>
+            <TooltipContent>Send</TooltipContent>
+          </Tooltip>
         </div>
       </div>
     </div>

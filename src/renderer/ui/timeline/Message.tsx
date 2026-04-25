@@ -8,6 +8,16 @@ import { accountManager } from '@/matrix/AccountManager';
 import { AuthedImage, useAuthedMedia, useAuthedEncryptedMedia, type EncryptedFile } from '@/lib/mxc';
 import { redactEvent, sendReaction, sendEdit } from '@/matrix/messageOps';
 import { PollView, isPollStartType } from './Poll';
+import { Button } from '@/ui/primitives/button';
+import { Textarea } from '@/ui/primitives/textarea';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/primitives/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/ui/primitives/dropdown-menu';
 
 interface MessageItemProps {
   entry: TimelineEntry;
@@ -107,67 +117,118 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
   return (
     <div className={`group relative flex gap-3 ${showHeader ? '' : 'mt-0.5'} px-4 py-0.5 hover:bg-[var(--color-hover-overlay-subtle)]`}>
       <div className="absolute right-4 top-0 z-10 hidden -translate-y-1/2 items-center gap-1 rounded-md bg-[var(--color-panel)] p-1 shadow-md group-hover:flex">
-        {quickReactions.map((r) => (
-          <button
-            key={r}
-            type="button"
-            onClick={() => onReact(r)}
-            className="rounded px-1 text-sm hover:bg-[var(--color-hover-overlay)]"
-            title={`React with ${r}`}
+        <DropdownMenu>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      aria-label="Add reaction"
+                    />
+                  }
+                />
+              }
+            >
+              <SmilePlus className="h-4 w-4" />
+            </TooltipTrigger>
+            <TooltipContent>Add reaction</TooltipContent>
+          </Tooltip>
+          <DropdownMenuContent align="end" className="min-w-36">
+            <div className="flex flex-wrap gap-1 p-1">
+              {quickReactions.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => onReact(r)}
+                  className="rounded px-2 py-1 text-base hover:bg-[var(--color-hover-overlay)]"
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => {
+                const k = prompt('Emoji');
+                if (k) void onReact(k);
+              }}
+            >
+              <SmilePlus className="h-4 w-4" />
+              Custom reaction…
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => setThreadRoot(entry.eventId)}
+                aria-label="Reply in thread"
+              />
+            }
           >
-            {r}
-          </button>
-        ))}
-        <button
-          type="button"
-          onClick={() => {
-            const k = prompt('Emoji');
-            if (k) void onReact(k);
-          }}
-          className="rounded p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
-          title="Custom reaction"
-        >
-          <SmilePlus className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => setThreadRoot(entry.eventId)}
-          className="rounded p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
-          title="Reply in thread"
-        >
-          <MessageSquare className="h-4 w-4" />
-        </button>
+            <MessageSquare className="h-4 w-4" />
+          </TooltipTrigger>
+          <TooltipContent>Reply in thread</TooltipContent>
+        </Tooltip>
         {isMine && !entry.isRedacted && (
           <>
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              className="rounded p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
-              title="Edit"
-            >
-              <Pencil className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={onRedact}
-              className="rounded p-1 text-red-400 hover:bg-[var(--color-hover-overlay)]"
-              title="Delete"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={() => setEditing(true)}
+                    aria-label="Edit"
+                  />
+                }
+              >
+                <Pencil className="h-4 w-4" />
+              </TooltipTrigger>
+              <TooltipContent>Edit</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={onRedact}
+                    aria-label="Delete"
+                    className="text-red-400 hover:text-red-300"
+                  />
+                }
+              >
+                <Trash2 className="h-4 w-4" />
+              </TooltipTrigger>
+              <TooltipContent>Delete</TooltipContent>
+            </Tooltip>
           </>
         )}
         {!isMine && (
-          <button
-            type="button"
-            onClick={() => {
-              /* Reply flow lives in composer in a later pass. */
-            }}
-            className="rounded p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
-            title="Reply"
-          >
-            <Reply className="h-4 w-4" />
-          </button>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={() => {
+                    /* Reply flow lives in composer in a later pass. */
+                  }}
+                  aria-label="Reply"
+                />
+              }
+            >
+              <Reply className="h-4 w-4" />
+            </TooltipTrigger>
+            <TooltipContent>Reply</TooltipContent>
+          </Tooltip>
         )}
       </div>
       <div className="w-10 flex-shrink-0">
@@ -219,27 +280,18 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
           />
         ) : editing ? (
           <div className="flex flex-col gap-1">
-            <textarea
+            <Textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              className="w-full rounded bg-[var(--color-surface)] p-2 text-sm text-[var(--color-text)] outline-none"
               rows={Math.min(8, Math.max(1, draft.split('\n').length))}
             />
             <div className="flex gap-2 text-xs">
-              <button
-                type="button"
-                className="rounded bg-[var(--color-accent)] px-2 py-1 text-white"
-                onClick={onSaveEdit}
-              >
+              <Button size="xs" onClick={onSaveEdit}>
                 Save
-              </button>
-              <button
-                type="button"
-                className="rounded bg-[var(--color-surface)] px-2 py-1 text-[var(--color-text)]"
-                onClick={() => setEditing(false)}
-              >
+              </Button>
+              <Button size="xs" variant="secondary" onClick={() => setEditing(false)}>
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         ) : isImage && client ? (

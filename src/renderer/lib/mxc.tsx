@@ -189,7 +189,6 @@ export function AuthedImage({
   const encUrl = useAuthedEncryptedMedia(client, file ?? null, mimetype);
   const url = file ? encUrl : plainUrl;
   if (!url) return fallback;
-  // eslint-disable-next-line jsx-a11y/alt-text
   return <img {...imgProps} src={url} />;
 }
 

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { MatrixClient, MatrixEvent, Room, RoomState } from 'matrix-js-sdk';
 import { RoomStateEvent } from 'matrix-js-sdk';
 import { Headphones, Mic, Phone, PhoneOff } from 'lucide-react';
+import { Button } from '@/ui/primitives/button';
 import type { RoomSummary } from '@/state/rooms';
 import { useAccountsStore } from '@/state/accounts';
 import { useRtcStore } from '@/state/rtc';
@@ -95,24 +96,24 @@ export function VoiceChannelView({ room }: { room: RoomSummary }) {
 
       <div className="mt-8 flex items-center gap-3">
         {isConnectedHere ? (
-          <button
-            type="button"
+          <Button
             onClick={onLeave}
-            className="flex items-center gap-2 rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-red-500"
+            size="lg"
+            className="rounded-full bg-red-600 text-white shadow hover:bg-red-500"
           >
             <PhoneOff className="h-4 w-4" />
             Disconnect
-          </button>
+          </Button>
         ) : (
-          <button
-            type="button"
+          <Button
             onClick={onJoin}
             disabled={!client}
-            className="flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-emerald-500 disabled:opacity-50"
+            size="lg"
+            className="rounded-full bg-emerald-600 text-white shadow hover:bg-emerald-500"
           >
             <Phone className="h-4 w-4" />
             Join channel
-          </button>
+          </Button>
         )}
       </div>
 

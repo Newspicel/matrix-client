@@ -28,20 +28,24 @@ function ParticipantTile({ identity, displayName }: { identity: string; displayN
       : lkRoom.remoteParticipants.get(identity);
     if (!participant) return;
 
+    // Capture ref values now so the cleanup sees the same node it attached to.
+    const videoEl = videoRef.current;
+    const audioEl = audioRef.current;
+
     const videoPubs = participant.getTrackPublications().filter(
       (p) => p.kind === Track.Kind.Video && p.track,
     );
     const videoPub: TrackPublication | undefined =
       videoPubs.find((p) => p.source === Track.Source.ScreenShare) ?? videoPubs[0];
 
-    if (videoPub?.track && videoRef.current) {
-      videoPub.track.attach(videoRef.current);
+    if (videoPub?.track && videoEl) {
+      videoPub.track.attach(videoEl);
     }
     const audioPub = participant
       .getTrackPublications()
       .find((p) => p.kind === Track.Kind.Audio && p.track);
-    if (audioPub?.track && !isLocal && audioRef.current) {
-      audioPub.track.attach(audioRef.current);
+    if (audioPub?.track && !isLocal && audioEl) {
+      audioPub.track.attach(audioEl);
     }
     // For remote participants we also want to actively subscribe.
     if (!isLocal) {
@@ -50,8 +54,8 @@ function ParticipantTile({ identity, displayName }: { identity: string; displayN
       }
     }
     return () => {
-      if (videoPub?.track && videoRef.current) videoPub.track.detach(videoRef.current);
-      if (audioPub?.track && audioRef.current) audioPub.track.detach(audioRef.current);
+      if (videoPub?.track && videoEl) videoPub.track.detach(videoEl);
+      if (audioPub?.track && audioEl) audioPub.track.detach(audioEl);
     };
   }, [identity]);
 

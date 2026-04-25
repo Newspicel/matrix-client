@@ -14,6 +14,9 @@ import { SettingsDialog } from '@/ui/settings/SettingsDialog';
 import { LoginAnotherDialog } from '@/ui/auth/LoginAnotherDialog';
 import { ImageLightbox } from '@/ui/timeline/ImageLightbox';
 import { ProfileCard } from '@/ui/shell/ProfileCard';
+import { CommandPalette } from '@/ui/shell/CommandPalette';
+import { TooltipProvider } from '@/ui/primitives/tooltip';
+import { Toaster } from '@/ui/primitives/sonner';
 
 export function App() {
   const [booting, setBooting] = useState(true);
@@ -47,21 +50,14 @@ export function App() {
     });
   }, []);
 
-  // Global Escape: close the topmost overlay, falling back to clearing the
-  // active room so the main pane returns to "Select a room".
+  // Base UI dialogs and popovers handle Escape themselves. This only covers
+  // in-app overlays that aren't dialogs yet: the thread pane and the "clear
+  // active room" fallback.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key !== 'Escape') return;
       const ui = useUiStore.getState();
-      if (ui.lightbox) {
-        ui.closeLightbox();
-      } else if (ui.profileCard) {
-        ui.closeProfileCard();
-      } else if (ui.loginAnotherOpen) {
-        ui.setLoginAnotherOpen(false);
-      } else if (ui.settingsOpen) {
-        ui.setSettingsOpen(false);
-      } else if (ui.threadRootId) {
+      if (ui.threadRootId) {
         ui.setThreadRoot(null);
       } else if (useAccountsStore.getState().activeRoomId) {
         useAccountsStore.getState().setActiveRoom(null);
@@ -83,23 +79,34 @@ export function App() {
     );
   }
 
-  if (!hasAccounts) return <LoginView />;
+  if (!hasAccounts) {
+    return (
+      <TooltipProvider>
+        <LoginView />
+        <Toaster />
+      </TooltipProvider>
+    );
+  }
 
   return (
-    <div className="flex h-full w-full select-none flex-col overflow-hidden bg-[var(--color-bg)] text-[var(--color-text)]">
-      <TitleBar />
-      <div className="flex min-h-0 flex-1">
-        <ServerRail />
-        <RoomList />
-        <MainPane />
-        <ThreadPane />
-        {memberListOpen && <MemberList />}
+    <TooltipProvider>
+      <div className="flex h-full w-full select-none flex-col overflow-hidden bg-[var(--color-bg)] text-[var(--color-text)]">
+        <TitleBar />
+        <div className="flex min-h-0 flex-1">
+          <ServerRail />
+          <RoomList />
+          <MainPane />
+          <ThreadPane />
+          {memberListOpen && <MemberList />}
+        </div>
+        <CallOverlay />
+        <ImageLightbox />
+        <ProfileCard />
+        <CommandPalette />
+        {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
+        {loginAnotherOpen && <LoginAnotherDialog onClose={() => setLoginAnotherOpen(false)} />}
       </div>
-      <CallOverlay />
-      <ImageLightbox />
-      <ProfileCard />
-      {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
-      {loginAnotherOpen && <LoginAnotherDialog onClose={() => setLoginAnotherOpen(false)} />}
-    </div>
+      <Toaster />
+    </TooltipProvider>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { MatrixClient } from 'matrix-js-sdk';
 import { useAccountsStore } from '@/state/accounts';
 import { accountManager } from '@/matrix/AccountManager';
+import { Button } from '@/ui/primitives/button';
 
 interface WidgetStateContent {
   type?: string;
@@ -71,14 +72,14 @@ export function WidgetFrame({ roomId }: { roomId: string }) {
     <div className="flex h-full flex-col">
       <div className="flex gap-1 border-b border-[var(--color-divider)] px-2 py-1 text-xs">
         {widgets.map((w) => (
-          <button
+          <Button
             key={w.stateKey}
-            type="button"
+            variant={activeWidget.stateKey === w.stateKey ? 'default' : 'ghost'}
+            size="xs"
             onClick={() => setActive(w.stateKey)}
-            className={`rounded px-2 py-1 ${activeWidget.stateKey === w.stateKey ? 'bg-[var(--color-accent)] text-white' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)]'}`}
           >
             {w.name}
-          </button>
+          </Button>
         ))}
       </div>
       <iframe
