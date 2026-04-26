@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  uuid: ^14.0.0
+
 importers:
 
   .:
@@ -2928,8 +2931,8 @@ packages:
   utf8-byte-length@1.0.5:
     resolution: {integrity: sha512-Xn0w3MtiQ6zoz2vFyUVruaCL53O/DwUvkEeOvj+uulMm0BkUGYWmBYVyElqZaSLhY6ZD0ulfU3aBra2aVT4xfA==}
 
-  uuid@13.0.0:
-    resolution: {integrity: sha512-XQegIaBTVUjSHliKqcnFqYypAd4S+WCYt5NIeRs6w/UAry7z8Y9j5ZwRRL4kzq9U3sD6v+85er9FvkEaBpji2w==}
+  uuid@14.0.0:
+    resolution: {integrity: sha512-Qo+uWgilfSmAhXCMav1uYFynlQO7fMFiMVZsQqZRMIXp0O7rR7qjkj+cPvBHLgBqi960QCoo/PH2/6ZtVqKvrg==}
     hasBin: true
 
   verror@1.10.1:
@@ -5305,7 +5308,7 @@ snapshots:
       p-retry: 8.0.0
       sdp-transform: 3.0.0
       unhomoglyph: 1.0.6
-      uuid: 13.0.0
+      uuid: 14.0.0
 
   matrix-widget-api@1.17.0:
     dependencies:
@@ -5840,7 +5843,7 @@ snapshots:
 
   utf8-byte-length@1.0.5: {}
 
-  uuid@13.0.0: {}
+  uuid@14.0.0: {}
 
   verror@1.10.1:
     dependencies:
