@@ -9,8 +9,8 @@
     let
       # Bump these together when cutting a release. The hash is the SRI
       # sha256 of the x86_64 AppImage published to GitHub Releases.
-      version = "0.3.0";
-      hash = "sha256-0xK2YrK0aj5YWk/PfpMYy7CGuAZ59xt38QdXqOzpeYk=";
+      version = "0.4.0";
+      hash = "sha256-OTPZB31CeiXXtUoeTxkg5rK6FZ36HopGc8Yf09bclSA=";
 
       mkLattice = pkgs:
         let
