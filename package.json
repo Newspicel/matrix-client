@@ -2,7 +2,7 @@
   "name": "lattice",
   "version": "0.0.0",
   "private": true,
-  "description": "Lattice — Discord-style desktop Matrix client (macOS + Linux)",
+  "description": "Lattice — desktop Matrix client (macOS + Linux)",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Newspicel/lattice.git"
