@@ -55,8 +55,10 @@ interface UiState {
   createRoomOpen: { parentSpaceId: string | null } | null;
   setCreateRoomOpen: (state: { parentSpaceId: string | null } | null) => void;
 
-  createSpaceOpen: boolean;
-  setCreateSpaceOpen: (open: boolean) => void;
+  // null = closed; { parentSpaceId } = open, optionally as a child of an
+  // existing space (creates a subspace / "category").
+  createSpaceOpen: { parentSpaceId: string | null } | null;
+  setCreateSpaceOpen: (state: { parentSpaceId: string | null } | null) => void;
 
   // The room/space whose settings dialog is open, if any. Stored separately
   // so a room can be active while its settings are closed (and vice versa).
@@ -65,6 +67,9 @@ interface UiState {
 
   spaceSettingsForId: string | null;
   setSpaceSettingsForId: (roomId: string | null) => void;
+
+  inviteForRoomId: string | null;
+  setInviteForRoomId: (roomId: string | null) => void;
 
   lightbox: LightboxImage | null;
   openLightbox: (image: LightboxImage) => void;
@@ -116,14 +121,17 @@ export const useUiStore = create<UiState>()(
       createRoomOpen: null,
       setCreateRoomOpen: (state) => set({ createRoomOpen: state }),
 
-      createSpaceOpen: false,
-      setCreateSpaceOpen: (open) => set({ createSpaceOpen: open }),
+      createSpaceOpen: null,
+      setCreateSpaceOpen: (state) => set({ createSpaceOpen: state }),
 
       roomSettingsForId: null,
       setRoomSettingsForId: (roomId) => set({ roomSettingsForId: roomId }),
 
       spaceSettingsForId: null,
       setSpaceSettingsForId: (roomId) => set({ spaceSettingsForId: roomId }),
+
+      inviteForRoomId: null,
+      setInviteForRoomId: (roomId) => set({ inviteForRoomId: roomId }),
 
       lightbox: null,
       openLightbox: (image) => set({ lightbox: image }),

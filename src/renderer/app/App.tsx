@@ -23,6 +23,7 @@ import { CreateRoomDialog } from '@/ui/dialogs/CreateRoomDialog';
 import { CreateSpaceDialog } from '@/ui/dialogs/CreateSpaceDialog';
 import { RoomSettingsDialog } from '@/ui/dialogs/RoomSettingsDialog';
 import { SpaceSettingsDialog } from '@/ui/dialogs/SpaceSettingsDialog';
+import { InviteDialog } from '@/ui/dialogs/InviteDialog';
 
 export function App() {
   useApplyTheme();
@@ -115,6 +116,7 @@ export function App() {
         <CreateSpaceDialog />
         <RoomSettingsDialog />
         <SpaceSettingsDialog />
+        <InviteDialog />
         {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
         {loginAnotherOpen && <LoginAnotherDialog onClose={() => setLoginAnotherOpen(false)} />}
       </div>

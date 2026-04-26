@@ -19,26 +19,25 @@ export function CreateRoomDialog() {
     activeAccountId ? s.byAccount[activeAccountId] ?? [] : [],
   );
 
-  const spaces = useMemo(() => allRooms.filter((r) => r.isSpace), [allRooms]);
+  const parentSpaceId = target?.parentSpaceId ?? null;
+  const parentSpace = useMemo(
+    () =>
+      parentSpaceId ? allRooms.find((r) => r.roomId === parentSpaceId) ?? null : null,
+    [allRooms, parentSpaceId],
+  );
 
   const [name, setName] = useState('');
   const [topic, setTopic] = useState('');
   const [isPublic, setIsPublic] = useState(false);
   const [encrypted, setEncrypted] = useState(true);
-  const [parentSpaceId, setParentSpaceId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // When the dialog opens, hydrate the parent space dropdown from the
-  // trigger's hint (e.g., the "+" inside a space view defaults to that space).
   useEffect(() => {
-    if (target) {
-      setParentSpaceId(target.parentSpaceId);
-    } else {
+    if (!target) {
       setName('');
       setTopic('');
       setIsPublic(false);
       setEncrypted(true);
-      setParentSpaceId(null);
     }
   }, [target]);
 
@@ -59,7 +58,7 @@ export function CreateRoomDialog() {
         topic: topic.trim() || undefined,
         isPublic,
         encrypted,
-        parentSpaceId: parentSpaceId || null,
+        parentSpaceId,
       });
       if (parentSpaceId) {
         setActiveSpace(parentSpaceId);
@@ -76,12 +75,16 @@ export function CreateRoomDialog() {
     }
   }
 
+  const description = parentSpace
+    ? `New room in “${parentSpace.name}”.`
+    : 'New group chat. Encrypted rooms can’t be made public after creation.';
+
   return (
     <DialogShell
       open={target !== null}
       onClose={() => setOpen(null)}
       title="Create room"
-      description="Create a group chat. Encrypted rooms can’t be made public after creation."
+      description={description}
     >
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <DialogField label="Name" htmlFor="create-room-name">
@@ -103,24 +106,6 @@ export function CreateRoomDialog() {
             disabled={busy}
           />
         </DialogField>
-        {spaces.length > 0 && (
-          <DialogField label="Parent space" htmlFor="create-room-space" hint="Adds the room as a child of the selected space.">
-            <select
-              id="create-room-space"
-              value={parentSpaceId ?? ''}
-              onChange={(e) => setParentSpaceId(e.target.value || null)}
-              disabled={busy}
-              className="h-9 w-full border border-[var(--color-divider)] bg-[var(--color-panel-2)] px-2 text-sm outline-none focus:border-[var(--color-text-faint)]"
-            >
-              <option value="">— None (orphan room) —</option>
-              {spaces.map((s) => (
-                <option key={s.roomId} value={s.roomId}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </DialogField>
-        )}
         <Toggle
           label="Public"
           hint="Anyone who knows the room link can join. Disables encryption."

@@ -15,6 +15,7 @@ export interface CreateSpaceInput {
   topic?: string;
   isPublic: boolean;
   invite?: string[];
+  parentSpaceId?: string | null;
 }
 
 /**
@@ -83,6 +84,15 @@ export async function createSpace(
   client: MatrixClient,
   input: CreateSpaceInput,
 ): Promise<string> {
+  const initialState: Array<{ type: string; state_key?: string; content: object }> = [];
+  if (input.parentSpaceId) {
+    initialState.push({
+      type: 'm.space.parent',
+      state_key: input.parentSpaceId,
+      content: { canonical: true, via: [extractServerName(client.getUserId())] },
+    });
+  }
+
   const result = await client.createRoom({
     name: input.name,
     topic: input.topic || undefined,
@@ -90,12 +100,17 @@ export async function createSpace(
     preset: input.isPublic ? Preset.PublicChat : Preset.PrivateChat,
     invite: input.invite ?? [],
     creation_content: { type: 'm.space' },
+    initial_state: initialState,
     // Spaces in Element/Synapse default to invite-rules; explicitly mark the
     // power levels so child-add isn't gated above the creator's default 100.
     power_level_content_override: {
       events_default: 100,
     },
   });
+
+  if (input.parentSpaceId) {
+    await addRoomToSpace(client, input.parentSpaceId, result.room_id);
+  }
   return result.room_id;
 }
 
@@ -201,6 +216,53 @@ export async function leaveRoom(
   roomId: string,
 ): Promise<void> {
   await client.leave(roomId);
+}
+
+/**
+ * Send a read receipt for the latest event in `roomId`. Silently no-ops if
+ * the room is empty or unknown to the SDK.
+ */
+export async function markRoomAsRead(
+  client: MatrixClient,
+  roomId: string,
+): Promise<void> {
+  const room = client.getRoom(roomId);
+  if (!room) return;
+  const events = room.getLiveTimeline().getEvents();
+  const last = events[events.length - 1];
+  if (!last) return;
+  await client.sendReadReceipt(last);
+}
+
+/**
+ * Mark every joined non-space child of `space` (and the space itself) as read.
+ * Errors on individual rooms are swallowed so one stuck room doesn't block
+ * the rest.
+ */
+export async function markSpaceAsRead(
+  client: MatrixClient,
+  spaceId: string,
+  childRoomIds: string[],
+): Promise<void> {
+  const ids = [spaceId, ...childRoomIds];
+  for (const id of ids) {
+    try {
+      await markRoomAsRead(client, id);
+    } catch (err) {
+      console.warn(`[markSpaceAsRead] ${id} failed`, err);
+    }
+  }
+}
+
+/**
+ * Build a matrix.to permalink for a room or space. Falls back to the raw
+ * room id when no canonical alias is set.
+ */
+export function buildRoomPermalink(client: MatrixClient, roomId: string): string {
+  const room = client.getRoom(roomId);
+  const alias = room?.getCanonicalAlias();
+  const target = alias ?? roomId;
+  return `https://matrix.to/#/${encodeURIComponent(target)}`;
 }
 
 export function isValidUserId(value: string): boolean {

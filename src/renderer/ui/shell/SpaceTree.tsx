@@ -1,10 +1,17 @@
-import { ChevronDown, ChevronRight, Hash, Lock, Volume2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, FolderPlus, Hash, Lock, Plus, Volume2 } from 'lucide-react';
 import type { MatrixClient } from 'matrix-js-sdk';
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { AuthedImage } from '@/lib/mxc';
 import type { RoomSummary } from '@/state/rooms';
 import { getSpaceTree } from '@/lib/spaces';
+import { useUiStore } from '@/state/ui';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/ui/primitives/dropdown-menu';
 
 export function channelIconFor(room: RoomSummary) {
   if (room.isVoice) return Volume2;
@@ -74,6 +81,7 @@ function SubspaceCategory({
   client: MatrixClient | null;
 }) {
   const [open, setOpen] = useState(true);
+  const setCreateRoomOpen = useUiStore((s) => s.setCreateRoomOpen);
   // When the category is collapsed but the active room lives inside it, keep
   // that one row visible so the user never loses sight of where they are.
   // As soon as they navigate elsewhere the row disappears with the rest.
@@ -81,19 +89,33 @@ function SubspaceCategory({
     ? rooms
     : rooms.filter((r) => r.roomId === activeRoomId);
   return (
-    <div>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-1 px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)]"
-      >
-        {open ? (
-          <ChevronDown className="h-3 w-3" />
-        ) : (
-          <ChevronRight className="h-3 w-3" />
-        )}
-        <span className="truncate">{space.name}</span>
-      </button>
+    <div className="group/subspace">
+      <div className="flex w-full items-center gap-1 px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="flex min-w-0 flex-1 items-center gap-1 hover:text-[var(--color-text-strong)]"
+        >
+          {open ? (
+            <ChevronDown className="h-3 w-3" />
+          ) : (
+            <ChevronRight className="h-3 w-3" />
+          )}
+          <span className="truncate">{space.name}</span>
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setCreateRoomOpen({ parentSpaceId: space.roomId });
+          }}
+          className="flex h-4 w-4 shrink-0 items-center justify-center text-[var(--color-text-muted)] opacity-0 transition-opacity hover:text-[var(--color-text-strong)] focus-visible:opacity-100 group-hover/subspace:opacity-100"
+          title={`Create room in ${space.name}`}
+          aria-label={`Create room in ${space.name}`}
+        >
+          <Plus className="h-3 w-3" strokeWidth={2} />
+        </button>
+      </div>
       {(open || visibleRooms.length > 0) && (
         <ul className="space-y-px">
           {open && rooms.length === 0 ? (

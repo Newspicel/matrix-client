@@ -1,4 +1,4 @@
-import { Home } from 'lucide-react';
+import { Home, Plus } from 'lucide-react';
 import { SyncState, type MatrixClient } from 'matrix-js-sdk';
 import { cn } from '@/lib/utils';
 import { useAccountsStore } from '@/state/accounts';
@@ -77,6 +77,7 @@ export function ServerRail() {
             }}
           />
         ))}
+        <CreateSpaceButton />
       </div>
       <div className="flex shrink-0 flex-col items-stretch gap-0.5 py-2">
         {otherAccounts.map((account) => {
@@ -251,6 +252,24 @@ function SpaceButton({
         </button>
       </RailTooltip>
       {space.highlights > 0 && <RailHighlightBadge count={space.highlights} />}
+    </RailItem>
+  );
+}
+
+function CreateSpaceButton() {
+  const setCreateSpaceOpen = useUiStore((s) => s.setCreateSpaceOpen);
+  return (
+    <RailItem active={false}>
+      <RailTooltip label="Create space">
+        <button
+          type="button"
+          onClick={() => setCreateSpaceOpen({ parentSpaceId: null })}
+          aria-label="Create space"
+          className="group flex h-10 w-10 items-center justify-center text-[var(--color-text-muted)] transition-colors duration-150 hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
+        >
+          <Plus className="h-4 w-4" strokeWidth={1.75} />
+        </button>
+      </RailTooltip>
     </RailItem>
   );
 }

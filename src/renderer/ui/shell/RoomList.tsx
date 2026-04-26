@@ -1,9 +1,26 @@
 import { useEffect, useMemo } from 'react';
 import type { MatrixClient } from 'matrix-js-sdk';
-import { MessageSquarePlus, Plus, Settings as SettingsIcon, Hash, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  CheckCheck,
+  FolderPlus,
+  Hash,
+  Link2,
+  LogOut,
+  MessageSquarePlus,
+  MoreVertical,
+  Plus,
+  Settings as SettingsIcon,
+  UserPlus,
+} from 'lucide-react';
 import { useAccountsStore } from '@/state/accounts';
 import { useRoomsStore, type RoomSummary } from '@/state/rooms';
 import { accountManager } from '@/matrix/AccountManager';
+import {
+  buildRoomPermalink,
+  leaveRoom,
+  markSpaceAsRead,
+} from '@/matrix/roomOps';
 import { getOrphanRooms, getSpaceTree } from '@/lib/spaces';
 import { RoomRow, SpaceTree } from '@/ui/shell/SpaceTree';
 import { HomeserverStatus } from '@/ui/shell/HomeserverStatus';
@@ -12,6 +29,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/ui/primitives/dropdown-menu';
 
@@ -109,68 +127,146 @@ export function RoomList() {
 }
 
 function RoomListActions({ activeSpace }: { activeSpace: RoomSummary | null }) {
+  if (activeSpace) return <SpaceMenu space={activeSpace} />;
+  return <HomeMenu />;
+}
+
+function HomeMenu() {
   const setStartDmOpen = useUiStore((s) => s.setStartDmOpen);
+  const setCreateRoomOpen = useUiStore((s) => s.setCreateRoomOpen);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <button
+            type="button"
+            className="flex h-7 w-7 items-center justify-center text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)] aria-expanded:bg-[var(--color-hover-overlay)] aria-expanded:text-[var(--color-text-strong)]"
+            title="New chat"
+            aria-label="New chat"
+          />
+        }
+      >
+        <Plus className="h-4 w-4" strokeWidth={1.75} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" sideOffset={4} className="min-w-56">
+        <DropdownMenuItem onClick={() => setStartDmOpen(true)}>
+          <MessageSquarePlus />
+          <span className="whitespace-nowrap">Start direct message</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setCreateRoomOpen({ parentSpaceId: null })}>
+          <Hash />
+          <span className="whitespace-nowrap">Create room</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function SpaceMenu({ space }: { space: RoomSummary }) {
+  const activeAccountId = useAccountsStore((s) => s.activeAccountId);
+  const setActiveSpace = useAccountsStore((s) => s.setActiveSpace);
+  const setActiveRoom = useAccountsStore((s) => s.setActiveRoom);
   const setCreateRoomOpen = useUiStore((s) => s.setCreateRoomOpen);
   const setCreateSpaceOpen = useUiStore((s) => s.setCreateSpaceOpen);
   const setSpaceSettingsForId = useUiStore((s) => s.setSpaceSettingsForId);
+  const setInviteForRoomId = useUiStore((s) => s.setInviteForRoomId);
+  const allRooms = useRoomsStore((s) =>
+    activeAccountId ? s.byAccount[activeAccountId] ?? [] : [],
+  );
+
+  const client: MatrixClient | null =
+    (activeAccountId ? accountManager.getClient(activeAccountId) : null) ?? null;
+
+  async function onMarkSpaceRead() {
+    if (!client) return;
+    try {
+      const tree = getSpaceTree(allRooms, space.roomId);
+      const childIds = [
+        ...tree.directRooms.map((r) => r.roomId),
+        ...tree.subspaces.flatMap((sub) => [sub.space.roomId, ...sub.rooms.map((r) => r.roomId)]),
+      ];
+      await markSpaceAsRead(client, space.roomId, childIds);
+      toast.success('Space marked as read.');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function onCopyLink() {
+    if (!client) return;
+    try {
+      const link = buildRoomPermalink(client, space.roomId);
+      await navigator.clipboard.writeText(link);
+      toast.success('Space link copied.');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function onLeave() {
+    if (!client) return;
+    if (!confirm(`Leave "${space.name}"? Rooms inside the space stay joined.`)) return;
+    try {
+      await leaveRoom(client, space.roomId);
+      setActiveSpace(null);
+      setActiveRoom(null);
+      toast.success(`Left ${space.name}.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err));
+    }
+  }
 
   return (
-    <>
-      {activeSpace && (
-        <button
-          type="button"
-          onClick={() => setSpaceSettingsForId(activeSpace.roomId)}
-          className="flex h-7 w-7 items-center justify-center text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
-          title="Space settings"
-          aria-label="Space settings"
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <button
+            type="button"
+            className="flex h-7 w-7 items-center justify-center text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)] aria-expanded:bg-[var(--color-hover-overlay)] aria-expanded:text-[var(--color-text-strong)]"
+            title="Space actions"
+            aria-label="Space actions"
+          />
+        }
+      >
+        <MoreVertical className="h-4 w-4" strokeWidth={1.75} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" sideOffset={4} className="min-w-56">
+        <DropdownMenuItem onClick={onMarkSpaceRead}>
+          <CheckCheck />
+          <span className="whitespace-nowrap">Mark as read</span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => setInviteForRoomId(space.roomId)}>
+          <UserPlus />
+          <span className="whitespace-nowrap">Invite</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onCopyLink}>
+          <Link2 />
+          <span className="whitespace-nowrap">Copy link</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => setCreateRoomOpen({ parentSpaceId: space.roomId })}
         >
-          <SettingsIcon className="h-4 w-4" strokeWidth={1.75} />
-        </button>
-      )}
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <button
-              type="button"
-              className="flex h-7 w-7 items-center justify-center text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)] aria-expanded:bg-[var(--color-hover-overlay)] aria-expanded:text-[var(--color-text-strong)]"
-              title={activeSpace ? 'Add to space' : 'New chat'}
-              aria-label={activeSpace ? 'Add to space' : 'New chat'}
-            />
-          }
+          <Hash />
+          <span className="whitespace-nowrap">Add room</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => setCreateSpaceOpen({ parentSpaceId: space.roomId })}
         >
-          <Plus className="h-4 w-4" strokeWidth={1.75} />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" sideOffset={4}>
-          {activeSpace ? (
-            <DropdownMenuItem
-              onClick={() =>
-                setCreateRoomOpen({ parentSpaceId: activeSpace.roomId })
-              }
-            >
-              <Hash />
-              <span>Create room in space</span>
-            </DropdownMenuItem>
-          ) : (
-            <>
-              <DropdownMenuItem onClick={() => setStartDmOpen(true)}>
-                <MessageSquarePlus />
-                <span>Start direct message</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setCreateRoomOpen({ parentSpaceId: null })}
-              >
-                <Hash />
-                <span>Create room</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setCreateSpaceOpen(true)}>
-                <Sparkles />
-                <span>Create space</span>
-              </DropdownMenuItem>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </>
+          <FolderPlus />
+          <span className="whitespace-nowrap">Add category</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setSpaceSettingsForId(space.roomId)}>
+          <SettingsIcon />
+          <span className="whitespace-nowrap">Space settings</span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive" onClick={onLeave}>
+          <LogOut />
+          <span className="whitespace-nowrap">Leave space</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
