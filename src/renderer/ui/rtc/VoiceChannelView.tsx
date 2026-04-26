@@ -78,10 +78,10 @@ export function VoiceChannelView({ room }: { room: RoomSummary }) {
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center bg-[var(--color-panel-2)] px-6 py-10">
-      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
-        <Headphones className="h-10 w-10" />
+      <div className="flex h-16 w-16 items-center justify-center border border-[var(--color-divider)] bg-[var(--color-panel)] text-[var(--color-text-strong)]">
+        <Headphones className="h-7 w-7" strokeWidth={1.5} />
       </div>
-      <h2 className="mt-4 text-xl font-semibold text-[var(--color-text-strong)]">
+      <h2 className="mt-4 text-xl font-semibold tracking-tight text-[var(--color-text-strong)]">
         {room.name}
       </h2>
       <p className="mt-1 text-sm text-[var(--color-text-muted)]">
@@ -99,7 +99,7 @@ export function VoiceChannelView({ room }: { room: RoomSummary }) {
           <Button
             onClick={onLeave}
             size="lg"
-            className="rounded-full bg-red-600 text-white shadow hover:bg-red-500"
+            className="bg-red-500 text-white hover:bg-red-400"
           >
             <PhoneOff className="h-4 w-4" />
             Disconnect
@@ -109,7 +109,7 @@ export function VoiceChannelView({ room }: { room: RoomSummary }) {
             onClick={onJoin}
             disabled={!client}
             size="lg"
-            className="rounded-full bg-emerald-600 text-white shadow hover:bg-emerald-500"
+            className="bg-emerald-500 text-white hover:bg-emerald-400"
           >
             <Phone className="h-4 w-4" />
             Join channel
@@ -123,8 +123,8 @@ export function VoiceChannelView({ room }: { room: RoomSummary }) {
         </p>
       )}
 
-      <div className="mt-10 flex items-center gap-1.5 text-[11px] text-[var(--color-text-faint)]">
-        <Mic className="h-3 w-3" />
+      <div className="mt-10 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-faint)]">
+        <Mic className="h-3 w-3" strokeWidth={1.75} />
         <span>Voice channel</span>
       </div>
     </div>
@@ -147,9 +147,9 @@ function ParticipantAvatars({
             mxc={m.avatarMxc}
             width={56}
             height={56}
-            className="h-14 w-14 rounded-full bg-[var(--color-surface)] object-cover ring-2 ring-emerald-500"
+            className="h-14 w-14 bg-[var(--color-surface)] object-cover ring-1 ring-emerald-500"
             fallback={
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-accent)] text-lg font-semibold text-white ring-2 ring-emerald-500">
+              <div className="flex h-14 w-14 items-center justify-center bg-[var(--color-surface)] text-lg font-semibold text-[var(--color-text-strong)] ring-1 ring-emerald-500">
                 {m.name.replace(/^[@#]/, '').charAt(0).toUpperCase()}
               </div>
             }

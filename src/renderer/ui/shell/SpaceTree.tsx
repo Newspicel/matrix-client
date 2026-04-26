@@ -29,7 +29,7 @@ export function SpaceTree({
   return (
     <div className="space-y-2">
       {tree.directRooms.length > 0 && (
-        <ul className="space-y-0.5 pt-1">
+        <ul className="space-y-px pt-1">
           {tree.directRooms.map((r) => (
             <RoomRow
               key={r.roomId}
@@ -79,7 +79,7 @@ function SubspaceCategory({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-1 px-1 pb-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)]"
+        className="flex w-full items-center gap-1 px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] hover:text-[var(--color-text-strong)]"
       >
         {open ? (
           <ChevronDown className="h-3 w-3" />
@@ -89,7 +89,7 @@ function SubspaceCategory({
         <span className="truncate">{space.name}</span>
       </button>
       {open && (
-        <ul className="space-y-0.5">
+        <ul className="space-y-px">
           {rooms.length === 0 ? (
             <li className="px-3 py-1 text-xs italic text-[var(--color-text-faint)]">
               Empty
@@ -128,23 +128,29 @@ export function RoomRow({
         type="button"
         onClick={onClick}
         className={cn(
-          'flex w-full items-center gap-2 rounded px-2 py-1.5 text-left transition-colors',
+          'group relative flex w-full items-center gap-2 px-2 py-1.5 text-left transition-colors',
           active
             ? 'bg-[var(--color-surface)] text-[var(--color-text-strong)]'
-            : 'text-[var(--color-text-muted)] hover:bg-[var(--color-panel-2)] hover:text-[var(--color-text-strong)]',
+            : 'text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay-subtle)] hover:text-[var(--color-text-strong)]',
           (room.unread > 0 || room.highlights > 0) &&
             !active &&
             'font-semibold text-[var(--color-text-strong)]',
         )}
       >
+        {active && (
+          <span
+            aria-hidden
+            className="absolute inset-y-1 left-0 w-[2px] bg-[var(--color-text-strong)]"
+          />
+        )}
         <RoomIcon room={room} client={client} />
         <span className="flex-1 truncate">{room.name}</span>
         {room.highlights > 0 ? (
-          <span className="rounded bg-red-600 px-1.5 text-[10px] font-bold">
+          <span className="bg-red-500 px-1.5 text-[10px] font-bold text-white">
             {room.highlights}
           </span>
         ) : room.unread > 0 ? (
-          <span className="rounded bg-[var(--color-surface)] px-1.5 text-[10px]">
+          <span className="border border-[var(--color-divider)] px-1.5 text-[10px] tabular-nums text-[var(--color-text-muted)]">
             {room.unread}
           </span>
         ) : null}
@@ -168,7 +174,7 @@ function RoomIcon({
           mxc={room.dmAvatarMxc ?? room.avatarMxc}
           width={28}
           height={28}
-          className="h-5 w-5 rounded-full bg-[var(--color-surface)] object-cover"
+          className="h-5 w-5 bg-[var(--color-surface)] object-cover"
           fallback={<InitialBadge text={room.name} />}
         />
         {room.isEncrypted && <EncryptedBadge />}
@@ -184,8 +190,8 @@ function RoomIcon({
         mxc={room.avatarMxc}
         width={28}
         height={28}
-        className="h-5 w-5 rounded-full bg-[var(--color-surface)] object-cover"
-        fallback={<Icon className="h-4 w-4 text-[var(--color-text-faint)]" />}
+        className="h-5 w-5 bg-[var(--color-surface)] object-cover"
+        fallback={<Icon className="h-4 w-4 text-[var(--color-text-faint)]" strokeWidth={1.75} />}
       />
       {room.isEncrypted && <EncryptedBadge />}
     </span>
@@ -193,21 +199,21 @@ function RoomIcon({
 }
 
 function EncryptedBadge() {
+  // Inline lock glyph with no chip background — on the rectilinear theme
+  // the filled square clashed with row hover colors.
   return (
-    <span
+    <Lock
       aria-label="Encrypted"
-      title="End-to-end encrypted"
-      className="absolute -bottom-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-[var(--color-panel)] text-emerald-500 ring-1 ring-[var(--color-panel)]"
-    >
-      <Lock className="h-2 w-2" strokeWidth={3} />
-    </span>
+      className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 text-emerald-500"
+      strokeWidth={3}
+    />
   );
 }
 
 function InitialBadge({ text }: { text: string }) {
   const initial = text.replace(/^[#@]/, '').charAt(0).toUpperCase() || '?';
   return (
-    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-accent)] text-[10px] font-semibold text-white">
+    <span className="flex h-5 w-5 items-center justify-center bg-[var(--color-surface)] text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-strong)]">
       {initial}
     </span>
   );

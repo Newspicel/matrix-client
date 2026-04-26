@@ -5,7 +5,6 @@ import { useRoomsStore, type RoomSummary } from '@/state/rooms';
 import { accountManager } from '@/matrix/AccountManager';
 import { getOrphanRooms, getSpaceTree } from '@/lib/spaces';
 import { RoomRow, SpaceTree } from '@/ui/shell/SpaceTree';
-import { UserPanel } from '@/ui/shell/UserPanel';
 import { useUiStore, viewKeyFor } from '@/state/ui';
 
 const EMPTY_ROOMS: RoomSummary[] = [];
@@ -58,15 +57,15 @@ export function RoomList() {
 
   return (
     <aside
-      className="flex h-full w-60 shrink-0 flex-col bg-[var(--color-panel)] text-sm"
+      className="flex h-full w-64 shrink-0 flex-col border-r border-[var(--color-divider)] bg-[var(--color-panel)] text-sm"
       aria-label="Room list"
     >
-      <header className="flex h-12 shrink-0 items-center border-b border-[var(--color-divider)] px-4 font-semibold shadow-sm">
+      <header className="flex h-12 shrink-0 items-center border-b border-[var(--color-divider)] px-4 text-xs font-semibold uppercase tracking-wider text-[var(--color-text-strong)]">
         <span className="truncate">
           {activeSpace ? activeSpace.name : 'Direct Messages'}
         </span>
       </header>
-      <div className="flex-1 overflow-y-auto p-2">
+      <div className="flex-1 overflow-y-auto p-1.5">
         {activeSpace ? (
           <SpaceTree
             space={activeSpace}
@@ -84,7 +83,6 @@ export function RoomList() {
           />
         )}
       </div>
-      <UserPanel />
     </aside>
   );
 }
@@ -127,10 +125,10 @@ function HomeView({
 
   return (
     <div>
-      <div className="px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+      <div className="px-2 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
         Direct messages
       </div>
-      <ul className="space-y-0.5">
+      <ul className="space-y-px">
         {rooms.map((r) => (
           <RoomRow
             key={r.roomId}

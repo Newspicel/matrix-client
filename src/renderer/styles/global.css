@@ -1,33 +1,39 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-/* Design tokens. Defaults are the dark theme; the light override below
-   rebinds the same variables under `prefers-color-scheme: light`, so every
-   `bg-[var(--color-*)]` utility in the app reacts to the OS theme. */
+/* Inter — primary UI face. Clean geometric sans-serif that pairs with the
+   sharp, rectilinear Lyra design language. JetBrains Mono is reserved for
+   numeric and code surfaces where the monospaced rhythm is informative. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* Design tokens — Lyra-inspired sharp, monochrome palette.
+   No rounded corners. Pure black canvas with subtle elevated panels and
+   1px borders that read as hairlines on dark surfaces. The light theme
+   below mirrors the same hierarchy in inverted values. */
 @theme {
-  --color-rail: #1b1b1f;
-  --color-rail-hover: #27272e;
-  --color-panel: #232329;
-  --color-panel-2: #2a2a31;
-  --color-surface: #313138;
-  --color-accent: #5865f2;
-  --color-accent-hover: #4752c4;
+  --color-rail: #0a0a0c;
+  --color-rail-hover: #15151a;
+  --color-panel: #0f0f12;
+  --color-panel-2: #16161a;
+  --color-surface: #1c1c21;
+  --color-accent: #f4f4f5;
+  --color-accent-hover: #d4d4d8;
   --color-divider: #1f1f24;
 
-  --color-bg: #18181b;
-  --color-text: #e8e8ea;
-  --color-text-strong: #ffffff;
-  --color-text-muted: #a0a0a6;
-  --color-text-faint: #71717a;
+  --color-bg: #050507;
+  --color-text: #e4e4e7;
+  --color-text-strong: #fafafa;
+  --color-text-muted: #8a8a92;
+  --color-text-faint: #5a5a62;
 
-  --color-hover-overlay: rgba(255, 255, 255, 0.1);
-  --color-hover-overlay-subtle: rgba(255, 255, 255, 0.03);
-  --color-backdrop: rgba(0, 0, 0, 0.6);
-  --color-backdrop-strong: rgba(0, 0, 0, 0.7);
-  --color-code-bg: rgba(0, 0, 0, 0.4);
+  --color-hover-overlay: rgba(255, 255, 255, 0.06);
+  --color-hover-overlay-subtle: rgba(255, 255, 255, 0.025);
+  --color-backdrop: rgba(0, 0, 0, 0.7);
+  --color-backdrop-strong: rgba(0, 0, 0, 0.85);
+  --color-code-bg: rgba(255, 255, 255, 0.04);
 
-  --color-scrollbar-thumb: #3a3a42;
-  --color-scrollbar-thumb-hover: #4a4a54;
+  --color-scrollbar-thumb: #2a2a30;
+  --color-scrollbar-thumb-hover: #3a3a42;
 
   /* shadcn-style semantic aliases. The primitives layer (src/renderer/ui/primitives)
      references these names so generated/migrated shadcn recipes work unchanged.
@@ -39,7 +45,7 @@
   --color-popover: var(--color-panel-2);
   --color-popover-foreground: var(--color-text);
   --color-primary: var(--color-accent);
-  --color-primary-foreground: #ffffff;
+  --color-primary-foreground: #0a0a0c;
   --color-secondary: var(--color-panel-2);
   --color-secondary-foreground: var(--color-text);
   --color-muted: var(--color-surface);
@@ -49,12 +55,20 @@
   --color-destructive-foreground: #ffffff;
   --color-border: var(--color-divider);
   --color-input: var(--color-divider);
-  --color-ring: var(--color-accent);
-  --radius: 0.5rem;
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --color-ring: var(--color-text-strong);
+
+  /* Sharp corners everywhere — the Lyra design language is rectilinear. */
+  --radius: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+
+  --font-sans:
+    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono:
+    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 :root {
@@ -65,30 +79,33 @@
   :root {
     color-scheme: light;
 
-    /* Hierarchy inverts in light mode: the rail is the most-tinted layer,
-       the main pane is near-white, and elevated surfaces sit slightly
-       darker than the room list so buttons/inputs feel recessed. */
-    --color-rail: #e3e5e8;
-    --color-rail-hover: #d4d7dc;
-    --color-panel: #ebedef;
-    --color-panel-2: #fafbfc;
-    --color-surface: #e4e6ea;
-    --color-divider: #dadce0;
+    /* Light mode mirrors the rectilinear hierarchy. The canvas is paper-white,
+       panels sit slightly tinted, and 1px borders darken the divider. */
+    --color-rail: #f4f4f5;
+    --color-rail-hover: #e4e4e7;
+    --color-panel: #fafafa;
+    --color-panel-2: #ffffff;
+    --color-surface: #f0f0f2;
+    --color-divider: #e4e4e7;
 
     --color-bg: #ffffff;
-    --color-text: #1a1b1e;
-    --color-text-strong: #06070a;
-    --color-text-muted: #4e5058;
-    --color-text-faint: #80848e;
+    --color-text: #18181b;
+    --color-text-strong: #050507;
+    --color-text-muted: #6b6b73;
+    --color-text-faint: #9a9aa2;
 
-    --color-hover-overlay: rgba(0, 0, 0, 0.06);
-    --color-hover-overlay-subtle: rgba(0, 0, 0, 0.03);
-    --color-backdrop: rgba(15, 17, 22, 0.35);
-    --color-backdrop-strong: rgba(15, 17, 22, 0.5);
-    --color-code-bg: rgba(0, 0, 0, 0.06);
+    --color-hover-overlay: rgba(0, 0, 0, 0.05);
+    --color-hover-overlay-subtle: rgba(0, 0, 0, 0.025);
+    --color-backdrop: rgba(15, 17, 22, 0.4);
+    --color-backdrop-strong: rgba(15, 17, 22, 0.6);
+    --color-code-bg: rgba(0, 0, 0, 0.05);
 
-    --color-scrollbar-thumb: #c5c8ce;
-    --color-scrollbar-thumb-hover: #a6a9b0;
+    --color-scrollbar-thumb: #d4d4d8;
+    --color-scrollbar-thumb-hover: #a1a1a8;
+
+    --color-accent: #18181b;
+    --color-accent-hover: #27272a;
+    --color-primary-foreground: #fafafa;
   }
 }
 
@@ -101,18 +118,20 @@ body,
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    'Helvetica Neue',
-    Arial,
-    sans-serif;
+  font-family: var(--font-sans);
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom scrollbars — Discord-ish */
+/* Numeric figures and code stay monospaced for rhythm and alignment.
+   Apply with `font-mono` (Tailwind) or the `.tabular` helper below. */
+.tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sharp scrollbars to match the no-radius aesthetic. */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -122,7 +141,7 @@ body {
 }
 ::-webkit-scrollbar-thumb {
   background: var(--color-scrollbar-thumb);
-  border-radius: 4px;
+  border-radius: 0;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-scrollbar-thumb-hover);

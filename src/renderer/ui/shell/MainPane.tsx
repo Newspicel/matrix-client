@@ -29,37 +29,42 @@ export function MainPane() {
 
   return (
     <section className="flex h-full flex-1 flex-col bg-[var(--color-panel-2)]">
-      <header className="flex h-12 shrink-0 items-center gap-2 border-b border-[var(--color-divider)] px-4 shadow-sm">
+      <header className="flex h-12 shrink-0 items-center gap-3 border-b border-[var(--color-divider)] px-4">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <HeaderRoomIcon
             isVoice={!!room?.isVoice}
             isEncrypted={!!room?.isEncrypted}
           />
-          <h1 className="truncate font-semibold">{room?.name ?? 'Select a room'}</h1>
+          <h1 className="truncate text-sm font-semibold tracking-tight text-[var(--color-text-strong)]">
+            {room?.name ?? 'Select a room'}
+          </h1>
           {room?.topic && (
-            <span className="ml-2 truncate text-xs text-[var(--color-text-muted)]">
-              — {room.topic}
-            </span>
+            <>
+              <span aria-hidden className="h-3 w-px bg-[var(--color-divider)]" />
+              <span className="truncate text-xs text-[var(--color-text-muted)]">
+                {room.topic}
+              </span>
+            </>
           )}
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center">
           {room && !room.isVoice && (
             <button
               type="button"
-              className="rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
+              className="flex h-8 w-8 items-center justify-center text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
               title="Start call"
               onClick={onStartCall}
             >
-              <Phone className="h-5 w-5" />
+              <Phone className="h-4 w-4" strokeWidth={1.75} />
             </button>
           )}
           <button
             type="button"
-            className="rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
+            className="flex h-8 w-8 items-center justify-center text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
             title="Toggle member list"
             onClick={toggleMembers}
           >
-            <Users className="h-5 w-5" />
+            <Users className="h-4 w-4" strokeWidth={1.75} />
           </button>
         </div>
       </header>
@@ -85,16 +90,14 @@ function HeaderRoomIcon({
 }) {
   const Icon = isVoice ? Volume2 : Hash;
   return (
-    <span className="relative inline-flex h-5 w-5 items-center justify-center text-[var(--color-text-muted)]">
-      <Icon className="h-5 w-5" />
+    <span className="relative inline-flex h-4 w-4 items-center justify-center text-[var(--color-text-muted)]">
+      <Icon className="h-4 w-4" strokeWidth={1.75} />
       {isEncrypted && (
-        <span
+        <Lock
           aria-label="Encrypted"
-          title="End-to-end encrypted"
-          className="absolute -bottom-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-[var(--color-panel-2)] text-emerald-500 ring-1 ring-[var(--color-panel-2)]"
-        >
-          <Lock className="h-2 w-2" strokeWidth={3} />
-        </span>
+          className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 text-emerald-500"
+          strokeWidth={3}
+        />
       )}
     </span>
   );

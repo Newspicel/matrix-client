@@ -34,6 +34,20 @@ const ALLOWED_TAGS = [
 
 const ALLOWED_ATTR = ['href', 'title', 'alt', 'src', 'class', 'data-mx-pill', 'rel', 'target'];
 
+const SAFE_HREF = /^(https?:|mailto:|matrix:|#)/i;
+
+DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+  if (!(node instanceof HTMLElement)) return;
+  if (node.tagName !== 'A') return;
+  const href = node.getAttribute('href');
+  if (!href || !SAFE_HREF.test(href)) {
+    node.removeAttribute('href');
+    return;
+  }
+  node.setAttribute('target', '_blank');
+  node.setAttribute('rel', 'noopener noreferrer');
+});
+
 export function plainTextToHtml(body: string): string {
   const html = marked.parse(body, { async: false }) as string;
   return DOMPurify.sanitize(html, { ALLOWED_TAGS, ALLOWED_ATTR });
@@ -41,6 +55,29 @@ export function plainTextToHtml(body: string): string {
 
 export function sanitizeEventHtml(htmlFromEvent: string): string {
   return DOMPurify.sanitize(htmlFromEvent, { ALLOWED_TAGS, ALLOWED_ATTR });
+}
+
+const URL_REGEX = /\b(https?:\/\/[^\s<>"'`]+)/g;
+const TRAILING_PUNCT = /[.,!?;:)\]}>'"`]+$/;
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+export function renderPlainBody(body: string): string {
+  const withLinks = escapeHtml(body).replace(URL_REGEX, (match) => {
+    const trailing = match.match(TRAILING_PUNCT)?.[0] ?? '';
+    const url = trailing ? match.slice(0, -trailing.length) : match;
+    if (!SAFE_HREF.test(url)) return match;
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>${trailing}`;
+  });
+  const withBreaks = withLinks.replace(/\n/g, '<br>');
+  return DOMPurify.sanitize(withBreaks, { ALLOWED_TAGS, ALLOWED_ATTR });
 }
 
 export function composeTextContent(body: string): {

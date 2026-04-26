@@ -68,7 +68,7 @@ export function ThreadPane() {
   if (!threadRootId) return null;
   return (
     <aside className="flex h-full w-96 shrink-0 flex-col border-l border-[var(--color-divider)] bg-[var(--color-panel)]">
-      <header className="flex h-12 items-center justify-between border-b border-[var(--color-divider)] px-4 font-semibold">
+      <header className="flex h-12 items-center justify-between border-b border-[var(--color-divider)] px-4 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-strong)]">
         Thread
         <Button
           variant="ghost"

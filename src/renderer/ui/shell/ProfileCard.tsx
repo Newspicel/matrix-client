@@ -91,6 +91,19 @@ export function ProfileCard() {
       }}
     >
       <PopoverPrimitive.Portal>
+        {/* Transparent click-trap: any click outside the card lands here
+            first and only closes the card, so the underlying click target
+            (another username, a button, the composer, etc.) is not also
+            activated by the same gesture. */}
+        <div
+          aria-hidden
+          className="fixed inset-0 z-40"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            close();
+          }}
+        />
         <PopoverPrimitive.Positioner
           anchor={virtualAnchor}
           side="right"
@@ -102,36 +115,40 @@ export function ProfileCard() {
           <PopoverPrimitive.Popup
             aria-label={`Profile — ${profile.displayName}`}
             style={{ width: CARD_WIDTH }}
-            className="overflow-hidden rounded-xl border border-[var(--color-divider)] bg-[var(--color-panel-2)] shadow-2xl outline-none data-[starting-style]:opacity-0 data-[ending-style]:opacity-0 transition-opacity duration-150"
+            className="overflow-hidden border border-[var(--color-divider)] bg-[var(--color-panel-2)] outline-none data-[starting-style]:opacity-0 data-[ending-style]:opacity-0 transition-opacity duration-150"
           >
-            <div className="h-16 bg-[var(--color-accent)]/30" />
-            <div className="-mt-10 flex flex-col items-start gap-2 px-4 pb-4">
+            <div className="flex items-start gap-3 border-b border-[var(--color-divider)] bg-[var(--color-panel)] p-4">
               <AuthedImage
                 client={client}
                 mxc={profile.avatarMxc}
                 width={80}
                 height={80}
-                className="h-20 w-20 rounded-full border-4 border-[var(--color-panel-2)] bg-[var(--color-surface)] object-cover"
+                className="h-14 w-14 shrink-0 bg-[var(--color-surface)] object-cover"
                 fallback={
-                  <span className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-[var(--color-panel-2)] bg-[var(--color-accent)] text-2xl font-semibold text-white">
+                  <span className="flex h-14 w-14 shrink-0 items-center justify-center bg-[var(--color-surface)] text-lg font-semibold uppercase tracking-wide text-[var(--color-text-strong)]">
                     {initialOf(profile.displayName)}
                   </span>
                 }
               />
-              <div className="w-full">
-                <div className="truncate text-base font-semibold text-[var(--color-text-strong)]">
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-semibold text-[var(--color-text-strong)]">
                   {profile.displayName}
                 </div>
-                <div className="truncate font-mono text-xs text-[var(--color-text-muted)]">
+                <div className="mt-0.5 truncate font-mono text-[11px] text-[var(--color-text-muted)]">
                   {target.userId}
                 </div>
-                {profile.powerLevel !== undefined && profile.powerLevel > 0 && (
-                  <div className="mt-1 text-xs text-[var(--color-text-faint)]">
-                    Power level — {profile.powerLevel}
-                  </div>
-                )}
               </div>
             </div>
+            {profile.powerLevel !== undefined && profile.powerLevel > 0 && (
+              <div className="flex items-center justify-between px-4 py-2.5 text-[11px]">
+                <span className="font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
+                  Power Level
+                </span>
+                <span className="tabular-nums text-[var(--color-text-strong)]">
+                  {profile.powerLevel}
+                </span>
+              </div>
+            )}
           </PopoverPrimitive.Popup>
         </PopoverPrimitive.Positioner>
       </PopoverPrimitive.Portal>

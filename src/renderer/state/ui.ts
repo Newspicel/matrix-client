@@ -82,7 +82,17 @@ export const useUiStore = create<UiState>()(
       closeLightbox: () => set({ lightbox: null }),
 
       profileCard: null,
-      openProfileCard: (target) => set({ profileCard: target }),
+      openProfileCard: (target) =>
+        set((s) => {
+          // Re-clicking the same user toggles the card closed instead of
+          // re-opening it on top of itself, matching how badges and popovers
+          // usually behave.
+          const cur = s.profileCard;
+          if (cur && cur.userId === target.userId && cur.accountId === target.accountId) {
+            return { profileCard: null };
+          }
+          return { profileCard: target };
+        }),
       closeProfileCard: () => set({ profileCard: null }),
 
       quickReactions: DEFAULT_REACTIONS,

@@ -90,11 +90,16 @@ export function MemberList() {
 
   return (
     <aside
-      className="hidden h-full w-60 shrink-0 flex-col bg-[var(--color-panel)] text-sm xl:flex"
+      className="hidden h-full w-60 shrink-0 flex-col border-l border-[var(--color-divider)] bg-[var(--color-panel)] text-sm xl:flex"
       aria-label="Members"
     >
-      <header className="flex h-12 shrink-0 items-center border-b border-[var(--color-divider)] px-4 font-semibold text-[var(--color-text-muted)] shadow-sm">
-        Members{members.length > 0 ? ` — ${members.length}` : ''}
+      <header className="flex h-12 shrink-0 items-center justify-between border-b border-[var(--color-divider)] px-4 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
+        <span>Members</span>
+        {members.length > 0 && (
+          <span className="tabular-nums text-[var(--color-text-faint)]">
+            {members.length}
+          </span>
+        )}
       </header>
       <div className="flex-1 overflow-y-auto p-2 text-[var(--color-text-muted)]">
         {!activeRoomId ? (
@@ -109,11 +114,14 @@ export function MemberList() {
           groups.map((group) => (
             <div key={group.key} className="pb-2">
               {group.label && (
-                <div className="px-2 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide">
-                  {group.label} — {group.members.length}
+                <div className="flex items-baseline justify-between px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
+                  <span>{group.label}</span>
+                  <span className="tabular-nums text-[var(--color-text-faint)]">
+                    {group.members.length}
+                  </span>
                 </div>
               )}
-              <ul className="space-y-0.5">
+              <ul className="space-y-px">
                 {group.members.map((m) => (
                   <li key={m.userId}>
                     <button
@@ -130,7 +138,7 @@ export function MemberList() {
                           },
                         });
                       }}
-                      className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-[var(--color-text-muted)] hover:bg-[var(--color-panel-2)] hover:text-[var(--color-text-strong)]"
+                      className="flex w-full items-center gap-2 px-2 py-1 text-left text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-hover-overlay-subtle)] hover:text-[var(--color-text-strong)]"
                       title={m.userId}
                     >
                       <AuthedImage
@@ -138,9 +146,9 @@ export function MemberList() {
                         mxc={m.avatarMxc}
                         width={32}
                         height={32}
-                        className="h-6 w-6 rounded-full bg-[var(--color-surface)] object-cover"
+                        className="h-6 w-6 bg-[var(--color-surface)] object-cover"
                         fallback={
-                          <InitialBadge text={m.name} className="h-6 w-6 rounded-full text-[11px]" />
+                          <InitialBadge text={m.name} className="h-6 w-6 text-[11px]" />
                         }
                       />
                       <span className="flex-1 truncate">{m.name}</span>

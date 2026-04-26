@@ -60,10 +60,10 @@ function ParticipantTile({ identity, displayName }: { identity: string; displayN
   }, [identity]);
 
   return (
-    <div className="relative flex items-center justify-center overflow-hidden rounded-lg bg-black">
+    <div className="relative flex items-center justify-center overflow-hidden border border-[var(--color-divider)] bg-black">
       <video ref={videoRef} className="h-full w-full object-cover" autoPlay playsInline muted />
       <audio ref={audioRef} autoPlay />
-      <span className="absolute bottom-2 left-2 rounded bg-black/60 px-2 py-0.5 text-xs text-white">
+      <span className="absolute bottom-2 left-2 bg-black/70 px-2 py-0.5 text-xs text-white">
         {displayName}
       </span>
     </div>

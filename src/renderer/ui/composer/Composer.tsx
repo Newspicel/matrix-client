@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { RoomMessageEventContent } from 'matrix-js-sdk/lib/@types/events';
-import { Paperclip, SendHorizontal, X, FileIcon, ImageIcon } from 'lucide-react';
+import { Paperclip, SendHorizontal, X, FileIcon, ImageIcon, Smile } from 'lucide-react';
 import { accountManager } from '@/matrix/AccountManager';
 import { useAccountsStore } from '@/state/accounts';
 import { composeTextContent } from '@/lib/markdown';
 import { uploadAndSendFile } from '@/matrix/attachments';
 import { Button } from '@/ui/primitives/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/primitives/tooltip';
+import { EmojiPicker } from '@/ui/primitives/emoji-picker';
 
 interface PendingAttachment {
   id: string;
@@ -19,14 +20,28 @@ function makePending(file: File): PendingAttachment {
   return { id: crypto.randomUUID(), file, previewUrl };
 }
 
+// Maximum auto-grow height for the textarea (Discord-style cap).
+// Roughly 12 lines at our default line-height; scroll kicks in past this.
+const COMPOSER_MAX_HEIGHT = 240;
+
 export function Composer() {
   const [value, setValue] = useState('');
   const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
+  const [emojiOpen, setEmojiOpen] = useState(false);
   const activeAccountId = useAccountsStore((s) => s.activeAccountId);
   const activeRoomId = useAccountsStore((s) => s.activeRoomId);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const disabled = !activeAccountId || !activeRoomId;
+
+  useLayoutEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = 'auto';
+    const next = Math.min(ta.scrollHeight, COMPOSER_MAX_HEIGHT);
+    ta.style.height = `${next}px`;
+    ta.style.overflowY = ta.scrollHeight > COMPOSER_MAX_HEIGHT ? 'auto' : 'hidden';
+  }, [value]);
 
   useEffect(() => {
     return () => {
@@ -109,12 +124,28 @@ export function Composer() {
     }
   }
 
+  function insertEmoji(emoji: string) {
+    const ta = textareaRef.current;
+    const start = ta?.selectionStart ?? value.length;
+    const end = ta?.selectionEnd ?? value.length;
+    const next = value.slice(0, start) + emoji + value.slice(end);
+    setValue(next);
+    // Restore caret right after the inserted emoji.
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (!el) return;
+      el.focus();
+      const caret = start + emoji.length;
+      el.setSelectionRange(caret, caret);
+    });
+  }
+
   const canSend = !disabled && (value.trim().length > 0 || attachments.length > 0);
 
   return (
-    <div className="shrink-0 border-t border-[var(--color-divider)] p-4">
+    <div className="shrink-0 border-t border-[var(--color-divider)] bg-[var(--color-panel-2)] p-3">
       <div
-        className={`flex flex-col gap-2 rounded-lg bg-[var(--color-surface)] px-3 py-2 transition-opacity ${
+        className={`flex flex-col gap-2 border border-[var(--color-divider)] bg-[var(--color-panel)] px-3 py-2 transition-colors focus-within:border-[var(--color-text-faint)] ${
           disabled ? 'opacity-50' : ''
         }`}
       >
@@ -129,20 +160,20 @@ export function Composer() {
             ))}
           </div>
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex items-end gap-2">
           <Tooltip>
             <TooltipTrigger
               render={
                 <label
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[var(--color-text-muted)] ${
+                  className={`mb-0.5 flex h-7 w-7 shrink-0 items-center justify-center text-[var(--color-text-muted)] transition-colors ${
                     disabled
                       ? 'cursor-not-allowed'
-                      : 'cursor-pointer hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text)]'
+                      : 'cursor-pointer hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]'
                   }`}
                 />
               }
             >
-              <Paperclip className="h-5 w-5" />
+              <Paperclip className="h-4 w-4" strokeWidth={1.75} />
               <input
                 type="file"
                 multiple
@@ -162,7 +193,28 @@ export function Composer() {
             disabled={disabled}
             placeholder={disabled ? 'Select a chat to send messages' : 'Message'}
             rows={1}
-            className="max-h-40 flex-1 resize-none self-center bg-transparent py-1 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-faint)] disabled:cursor-not-allowed"
+            className="flex-1 resize-none bg-transparent py-1.5 text-sm leading-5 text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-faint)] disabled:cursor-not-allowed"
+          />
+          <EmojiPicker
+            open={emojiOpen}
+            onOpenChange={(o) => setEmojiOpen(o && !disabled)}
+            onSelect={(emoji) => {
+              insertEmoji(emoji);
+            }}
+            trigger={
+              <button
+                type="button"
+                disabled={disabled}
+                aria-label="Insert emoji"
+                className={`mb-0.5 flex h-7 w-7 shrink-0 items-center justify-center text-[var(--color-text-muted)] transition-colors aria-expanded:bg-[var(--color-hover-overlay)] aria-expanded:text-[var(--color-text-strong)] ${
+                  disabled
+                    ? 'cursor-not-allowed'
+                    : 'hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]'
+                }`}
+              >
+                <Smile className="h-4 w-4" strokeWidth={1.75} />
+              </button>
+            }
           />
           <Tooltip>
             <TooltipTrigger
@@ -173,6 +225,7 @@ export function Composer() {
                   variant={canSend ? 'default' : 'ghost'}
                   size="icon-sm"
                   aria-label="Send message"
+                  className="mb-0.5"
                 />
               }
             >
@@ -196,28 +249,28 @@ function AttachmentChip({
   const { file, previewUrl } = attachment;
   const isImage = file.type.startsWith('image/');
   return (
-    <div className="group relative flex items-center gap-2 rounded-md bg-[var(--color-panel)] px-2 py-1.5 pr-7 text-xs">
+    <div className="group relative flex items-center gap-2 border border-[var(--color-divider)] bg-[var(--color-panel-2)] px-2 py-1.5 pr-7 text-xs">
       {isImage && previewUrl ? (
         <img
           src={previewUrl}
           alt={file.name}
-          className="h-10 w-10 shrink-0 rounded object-cover"
+          className="h-10 w-10 shrink-0 object-cover"
         />
       ) : (
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-[var(--color-surface)] text-[var(--color-text-muted)]">
-          {isImage ? <ImageIcon className="h-5 w-5" /> : <FileIcon className="h-5 w-5" />}
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-[var(--color-surface)] text-[var(--color-text-muted)]">
+          {isImage ? <ImageIcon className="h-4 w-4" strokeWidth={1.75} /> : <FileIcon className="h-4 w-4" strokeWidth={1.75} />}
         </div>
       )}
       <div className="max-w-[180px]">
         <div className="truncate font-medium text-[var(--color-text)]">{file.name}</div>
-        <div className="text-[10px] text-[var(--color-text-faint)]">
+        <div className="font-mono text-[10px] tabular-nums text-[var(--color-text-faint)]">
           {formatBytes(file.size)}
         </div>
       </div>
       <button
         type="button"
         onClick={onRemove}
-        className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-red-600 hover:text-white"
+        className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center bg-[var(--color-surface)] text-[var(--color-text-muted)] transition-colors hover:bg-red-500 hover:text-white"
         aria-label={`Remove ${file.name}`}
       >
         <X className="h-3 w-3" />

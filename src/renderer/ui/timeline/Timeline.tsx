@@ -206,16 +206,18 @@ const BEGINNING_TS_FORMATTER = new Intl.DateTimeFormat(undefined, {
 
 function BeginningOfConversation({ info }: { info: BeginningInfo }) {
   return (
-    <div className="px-4 pb-2 pt-16">
+    <div className="px-4 pb-4 pt-16">
       <AuthedImage
         client={info.client}
         mxc={info.avatarMxc}
         width={80}
         height={80}
-        className="h-20 w-20 rounded-2xl bg-[var(--color-surface)] object-cover"
-        fallback={<InitialBadge text={info.name} className="h-20 w-20 rounded-2xl text-3xl" />}
+        className="h-16 w-16 bg-[var(--color-surface)] object-cover"
+        fallback={<InitialBadge text={info.name} className="h-16 w-16 text-2xl uppercase tracking-wide" />}
       />
-      <h2 className="mt-3 text-2xl font-bold text-[var(--color-text-strong)]">{info.name}</h2>
+      <h2 className="mt-4 text-xl font-bold tracking-tight text-[var(--color-text-strong)]">
+        {info.name}
+      </h2>
       <p className="mt-1 text-sm text-[var(--color-text)]">
         This is the beginning of conversation.
       </p>
@@ -243,9 +245,9 @@ const DATE_FORMATTER = new Intl.DateTimeFormat(undefined, {
 
 function DateDivider({ ts }: { ts: number }) {
   return (
-    <div className="mt-4 flex items-center gap-3 px-4">
+    <div className="mt-6 flex items-center gap-3 px-4">
       <div className="h-px flex-1 bg-[var(--color-divider)]" />
-      <span className="text-[11px] font-medium text-[var(--color-text-faint)]">
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-faint)]">
         {DATE_FORMATTER.format(new Date(ts))}
       </span>
       <div className="h-px flex-1 bg-[var(--color-divider)]" />

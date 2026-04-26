@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { useAccountsStore } from '@/state/accounts';
 import { useUiStore } from '@/state/ui';
 import { accountManager } from '@/matrix/AccountManager';
@@ -15,6 +15,7 @@ import { CryptoEvent } from 'matrix-js-sdk/lib/crypto-api/CryptoEvent';
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { Button } from '@/ui/primitives/button';
 import { Input } from '@/ui/primitives/input';
+import { EmojiPicker } from '@/ui/primitives/emoji-picker';
 import { toast } from 'sonner';
 
 interface Device {
@@ -145,10 +146,12 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
         <DialogPrimitive.Backdrop className="fixed inset-0 z-40 bg-[var(--color-backdrop)] data-[starting-style]:opacity-0 data-[ending-style]:opacity-0 transition-opacity duration-150" />
         <DialogPrimitive.Popup
           aria-label="Settings"
-          className="fixed left-1/2 top-1/2 z-50 flex h-[80vh] w-[820px] -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl bg-[var(--color-panel)] shadow-2xl outline-none data-[starting-style]:opacity-0 data-[ending-style]:opacity-0 transition-opacity duration-150"
+          className="fixed left-1/2 top-1/2 z-50 flex h-[80vh] w-[820px] -translate-x-1/2 -translate-y-1/2 flex-col border border-[var(--color-divider)] bg-[var(--color-panel)] outline-none data-[starting-style]:opacity-0 data-[ending-style]:opacity-0 transition-opacity duration-150"
         >
-          <header className="flex h-12 items-center justify-between border-b border-[var(--color-divider)] px-4">
-            <DialogPrimitive.Title className="font-semibold">Settings</DialogPrimitive.Title>
+          <header className="flex h-12 items-center justify-between border-b border-[var(--color-divider)] bg-[var(--color-panel-2)] px-4">
+            <DialogPrimitive.Title className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-strong)]">
+              Settings
+            </DialogPrimitive.Title>
             <DialogPrimitive.Close
               render={
                 <Button variant="ghost" size="icon-sm" aria-label="Close" />
@@ -160,14 +163,14 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
 
           <div className="flex-1 overflow-y-auto p-6">
             <section className="mb-6">
-              <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+              <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
                 Encryption
               </h3>
               <p className="mb-3 text-xs text-[var(--color-text-muted)]">
                 To decrypt messages sent before this device logged in, verify this device from
                 another signed-in session, or enter your recovery key below.
               </p>
-              <div className="flex flex-col gap-2 rounded-md bg-[var(--color-surface)] p-3">
+              <div className="flex flex-col gap-2 border border-[var(--color-divider)] bg-[var(--color-panel-2)] p-3">
                 <label className="text-xs font-medium text-[var(--color-text-muted)]" htmlFor="recovery-key">
                   Recovery key
                 </label>
@@ -179,7 +182,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
                   placeholder="EsT1 2AbC 3dEf …"
                   value={recoveryKey}
                   onChange={(e) => setRecoveryKey(e.target.value)}
-                  className="bg-[var(--color-panel)] font-mono"
+                  className="font-mono"
                 />
                 <div className="flex items-center gap-2">
                   <Button
@@ -203,18 +206,18 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
             </section>
 
             <section className="mb-6">
-              <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+              <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
                 Devices
               </h3>
-              <ul className="space-y-1">
+              <ul className="divide-y divide-[var(--color-divider)] border border-[var(--color-divider)] bg-[var(--color-panel-2)]">
                 {devices.map((d) => (
                   <li
                     key={d.id}
-                    className="flex items-center justify-between rounded-md bg-[var(--color-surface)] px-3 py-2 text-sm"
+                    className="flex items-center justify-between px-3 py-2 text-sm"
                   >
                     <div>
                       <div className="font-medium text-[var(--color-text-strong)]">{d.displayName || d.id}</div>
-                      <div className="text-xs text-[var(--color-text-faint)]">
+                      <div className="font-mono text-xs text-[var(--color-text-faint)]">
                         {d.id}
                         {d.lastSeenTs ? ` · ${new Date(d.lastSeenTs).toLocaleString()}` : ''}
                       </div>
@@ -235,20 +238,20 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
             </section>
 
             <section className="mb-6">
-              <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+              <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
                 Quick reactions
               </h3>
               <p className="mb-3 text-xs text-[var(--color-text-muted)]">
-                Emojis shown on hover over a message. Enter one emoji per field; leave blank to drop that slot.
+                Emojis shown on hover over a message. Click a slot to change it, or use the “+” to add another.
               </p>
               <QuickReactionsEditor />
             </section>
 
             <section>
-              <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+              <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
                 Account
               </h3>
-              <div className="flex flex-col gap-3 rounded-md border border-red-900/50 bg-red-950/30 p-3">
+              <div className="flex flex-col gap-3 border border-red-900/50 bg-red-950/30 p-3">
                 <div>
                   <div className="text-sm font-medium text-[var(--color-text-strong)]">
                     Sign out of {activeAccount?.displayName || activeAccount?.userId || 'this account'}
@@ -265,7 +268,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
                       type="button"
                       onClick={onSignOut}
                       disabled={signingOut}
-                      className="bg-red-600 text-white hover:bg-red-500"
+                      className="bg-red-500 text-white hover:bg-red-400"
                     >
                       {signingOut ? 'Signing out…' : 'Confirm sign out'}
                     </Button>
@@ -282,7 +285,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
                   <Button
                     type="button"
                     onClick={() => setConfirmingSignOut(true)}
-                    className="self-start bg-red-600/80 text-white hover:bg-red-600"
+                    className="self-start bg-red-500/80 text-white hover:bg-red-500"
                   >
                     Sign out & remove account
                   </Button>
@@ -325,7 +328,7 @@ function VerificationIncoming({
         <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-[var(--color-backdrop-strong)]" />
         <DialogPrimitive.Popup
           aria-label="Incoming verification"
-          className="fixed left-1/2 top-1/2 z-50 w-[360px] -translate-x-1/2 -translate-y-1/2 rounded-xl bg-[var(--color-panel-2)] p-6 text-center outline-none"
+          className="fixed left-1/2 top-1/2 z-50 w-[360px] -translate-x-1/2 -translate-y-1/2 border border-[var(--color-divider)] bg-[var(--color-panel-2)] p-6 text-center outline-none"
         >
           <DialogPrimitive.Title className="mb-3 text-lg font-semibold">
             Incoming verification
@@ -348,39 +351,70 @@ function VerificationIncoming({
 function QuickReactionsEditor() {
   const quickReactions = useUiStore((s) => s.quickReactions);
   const setQuickReactions = useUiStore((s) => s.setQuickReactions);
-  // Keep local text so the user can temporarily hold invalid values (e.g.
-  // mid-edit when a field is empty) without us stripping them.
-  const [drafts, setDrafts] = useState<string[]>(() => [...quickReactions, '']);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-  useEffect(() => {
-    setDrafts([...quickReactions, '']);
-  }, [quickReactions]);
-
-  function commit(next: string[]) {
-    const cleaned = next.map((s) => s.trim()).filter((s) => s.length > 0);
-    setQuickReactions(cleaned);
+  function replaceAt(i: number, emoji: string) {
+    const next = [...quickReactions];
+    if (i >= next.length) next.push(emoji);
+    else next[i] = emoji;
+    setQuickReactions(next);
   }
 
-  function updateAt(i: number, v: string) {
-    const next = [...drafts];
-    next[i] = v;
-    // Always keep a trailing blank slot so the user has room to add more.
-    if (i === next.length - 1 && v.trim()) next.push('');
-    setDrafts(next);
+  function removeAt(i: number) {
+    const next = quickReactions.filter((_, idx) => idx !== i);
+    setQuickReactions(next);
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-md bg-[var(--color-surface)] p-3">
-      {drafts.map((value, i) => (
-        <Input
-          key={i}
-          value={value}
-          onChange={(e) => updateAt(i, e.target.value)}
-          onBlur={() => commit(drafts)}
-          maxLength={8}
-          className="h-10 w-12 bg-[var(--color-panel)] text-center text-lg"
-        />
+    <div className="flex flex-wrap items-center gap-2 border border-[var(--color-divider)] bg-[var(--color-panel-2)] p-3">
+      {quickReactions.map((emoji, i) => (
+        <div key={i} className="group relative">
+          <EmojiPicker
+            open={editingIndex === i}
+            onOpenChange={(o) => setEditingIndex(o ? i : null)}
+            side="bottom"
+            onSelect={(next) => {
+              replaceAt(i, next);
+              setEditingIndex(null);
+            }}
+            trigger={
+              <button
+                type="button"
+                className="flex h-10 w-12 items-center justify-center border border-[var(--color-divider)] bg-[var(--color-panel)] text-xl transition-colors hover:bg-[var(--color-surface)] aria-expanded:border-[var(--color-text-faint)] aria-expanded:bg-[var(--color-surface)]"
+                aria-label={`Quick reaction ${i + 1}: ${emoji}. Click to change.`}
+              >
+                {emoji}
+              </button>
+            }
+          />
+          <button
+            type="button"
+            onClick={() => removeAt(i)}
+            className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center bg-[var(--color-panel-2)] text-[var(--color-text-muted)] opacity-0 transition-colors group-hover:opacity-100 hover:bg-red-500 hover:text-white"
+            aria-label={`Remove quick reaction ${emoji}`}
+          >
+            <X className="h-2.5 w-2.5" />
+          </button>
+        </div>
       ))}
+      <EmojiPicker
+        open={editingIndex === quickReactions.length}
+        onOpenChange={(o) => setEditingIndex(o ? quickReactions.length : null)}
+        side="bottom"
+        onSelect={(next) => {
+          replaceAt(quickReactions.length, next);
+          setEditingIndex(null);
+        }}
+        trigger={
+          <button
+            type="button"
+            className="flex h-10 w-12 items-center justify-center border border-dashed border-[var(--color-divider)] text-[var(--color-text-muted)] transition-colors hover:border-[var(--color-text-faint)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)] aria-expanded:bg-[var(--color-hover-overlay)]"
+            aria-label="Add quick reaction"
+          >
+            <Plus className="h-4 w-4" strokeWidth={1.75} />
+          </button>
+        }
+      />
     </div>
   );
 }
@@ -403,7 +437,7 @@ function VerificationEmoji({
         <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-[var(--color-backdrop-strong)]" />
         <DialogPrimitive.Popup
           aria-label="Compare emojis"
-          className="fixed left-1/2 top-1/2 z-50 w-[460px] -translate-x-1/2 -translate-y-1/2 rounded-xl bg-[var(--color-panel-2)] p-6 text-center outline-none"
+          className="fixed left-1/2 top-1/2 z-50 w-[460px] -translate-x-1/2 -translate-y-1/2 border border-[var(--color-divider)] bg-[var(--color-panel-2)] p-6 text-center outline-none"
         >
           <DialogPrimitive.Title className="mb-1 text-lg font-semibold">
             Compare emojis

@@ -14,9 +14,10 @@ export function CallOverlay() {
   if (!call) return null;
 
   return (
-    <div className="pointer-events-auto absolute inset-x-10 bottom-10 top-16 z-50 flex flex-col rounded-xl border border-[var(--color-divider)] bg-[color-mix(in_srgb,var(--color-bg)_95%,transparent)] shadow-2xl">
-      <header className="flex h-10 items-center border-b border-[var(--color-divider)] px-4 text-sm font-semibold">
-        Call — {call.roomName}
+    <div className="pointer-events-auto absolute inset-x-10 bottom-10 top-16 z-50 flex flex-col border border-[var(--color-divider)] bg-[color-mix(in_srgb,var(--color-bg)_95%,transparent)]">
+      <header className="flex h-10 items-center justify-between border-b border-[var(--color-divider)] bg-[var(--color-panel-2)] px-4 text-[10px] font-semibold uppercase tracking-wider">
+        <span className="text-[var(--color-text-muted)]">Call</span>
+        <span className="text-[var(--color-text-strong)]">{call.roomName}</span>
       </header>
       <div className="relative flex-1 p-4">
         <TileGrid />
@@ -61,10 +62,10 @@ function CallButton({
 }) {
   const color =
     variant === 'danger'
-      ? 'bg-red-600 hover:bg-red-500 text-white'
+      ? 'bg-red-500 hover:bg-red-400 text-white'
       : active
-        ? 'bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)]'
-        : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-panel)]';
+        ? 'bg-[var(--color-text-strong)] text-[var(--color-bg)] hover:bg-[var(--color-accent-hover)]'
+        : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-panel-2)] hover:text-[var(--color-text-strong)]';
   return (
     <Tooltip>
       <TooltipTrigger
@@ -72,11 +73,11 @@ function CallButton({
           <Button
             onClick={onClick}
             aria-label={label}
-            className={`h-10 w-10 rounded-full p-0 ${color}`}
+            className={`h-10 w-10 p-0 ${color}`}
           />
         }
       >
-        <Icon className="h-5 w-5" />
+        <Icon className="h-4 w-4" />
       </TooltipTrigger>
       <TooltipContent>{label}</TooltipContent>
     </Tooltip>

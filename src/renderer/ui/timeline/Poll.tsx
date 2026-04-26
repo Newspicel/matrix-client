@@ -82,9 +82,14 @@ export function PollView({ client, roomId, startEventId, content }: PollRenderer
   const total = Object.values(tally).reduce((a, b) => a + b, 0) || 1;
 
   return (
-    <div className="my-1 rounded-md border border-[var(--color-divider)] bg-[var(--color-surface)] p-3">
-      <div className="mb-2 font-medium">
-        {start.question.body} {ended && <span className="text-xs text-[var(--color-text-faint)]">· closed</span>}
+    <div className="my-2 border border-[var(--color-divider)] bg-[var(--color-panel)] p-3">
+      <div className="mb-3 flex items-center justify-between">
+        <span className="font-semibold">{start.question.body}</span>
+        {ended && (
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-faint)]">
+            Closed
+          </span>
+        )}
       </div>
       <ul className="space-y-1">
         {start.answers.map((ans) => {
@@ -100,15 +105,21 @@ export function PollView({ client, roomId, startEventId, content }: PollRenderer
                 type="button"
                 disabled={ended}
                 onClick={() => vote(ans.id)}
-                className={`relative w-full overflow-hidden rounded px-3 py-1.5 text-left text-sm ${mine ? 'bg-[var(--color-accent)]/30' : 'bg-[var(--color-panel-2)] hover:bg-[var(--color-panel)]'} disabled:opacity-70`}
+                className={`relative w-full overflow-hidden border px-3 py-2 text-left text-sm transition-colors disabled:opacity-70 ${
+                  mine
+                    ? 'border-[var(--color-text-strong)] bg-[var(--color-surface)]'
+                    : 'border-[var(--color-divider)] bg-[var(--color-panel-2)] hover:border-[var(--color-text-faint)]'
+                }`}
               >
                 <div
-                  className="absolute inset-y-0 left-0 bg-[var(--color-accent)]/20"
+                  className="absolute inset-y-0 left-0 bg-[var(--color-hover-overlay)]"
                   style={{ width: `${pct}%` }}
                 />
                 <span className="relative z-10 flex justify-between">
                   <span>{answerBody}</span>
-                  <span className="text-xs text-[var(--color-text-muted)]">{count} · {pct}%</span>
+                  <span className="font-mono text-xs tabular-nums text-[var(--color-text-muted)]">
+                    {count} · {pct}%
+                  </span>
                 </span>
               </button>
             </li>

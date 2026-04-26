@@ -51,7 +51,7 @@ export function CommandPalette() {
         <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-[var(--color-backdrop)] data-[starting-style]:opacity-0 data-[ending-style]:opacity-0 transition-opacity duration-150" />
         <DialogPrimitive.Popup
           aria-label="Jump to room"
-          className="fixed left-1/2 top-[20%] z-50 w-[560px] max-w-[calc(100%-2rem)] -translate-x-1/2 overflow-hidden rounded-xl border border-[var(--color-divider)] bg-[var(--color-panel)] shadow-2xl outline-none"
+          className="fixed left-1/2 top-[20%] z-50 w-[560px] max-w-[calc(100%-2rem)] -translate-x-1/2 overflow-hidden border border-[var(--color-divider)] bg-[var(--color-panel)] outline-none"
         >
           <Command loop>
             <CommandInput placeholder="Jump to a room…" autoFocus />
@@ -80,7 +80,7 @@ export function CommandPalette() {
                             <Lock className="size-3 text-emerald-500" />
                           )}
                           {room.highlights > 0 && (
-                            <span className="rounded bg-red-600 px-1.5 text-[10px] font-bold text-white">
+                            <span className="bg-red-500 px-1.5 text-[10px] font-bold text-white">
                               {room.highlights}
                             </span>
                           )}

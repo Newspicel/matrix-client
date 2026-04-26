@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Lock, SmilePlus, Reply, Pencil, Trash2, MessageSquare } from 'lucide-react';
 import type { TimelineEntry } from '@/state/timeline';
-import { sanitizeEventHtml } from '@/lib/markdown';
+import { sanitizeEventHtml, renderPlainBody } from '@/lib/markdown';
 import { useAccountsStore } from '@/state/accounts';
 import { useUiStore } from '@/state/ui';
 import { accountManager } from '@/matrix/AccountManager';
@@ -77,7 +77,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
     if (content.format === 'org.matrix.custom.html' && content.formatted_body) {
       return sanitizeEventHtml(content.formatted_body);
     }
-    return escapeHtml(content.body ?? '');
+    return renderPlainBody(content.body ?? '');
   }, [entry.isRedacted, entry.isDecryptionFailure, isPendingDecryption, content.format, content.formatted_body, content.body]);
 
   const hasMediaSource =
@@ -128,7 +128,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
 
   return (
     <div className={`group relative flex gap-3 ${showHeader ? '' : 'mt-0.5'} px-4 py-0.5 hover:bg-[var(--color-hover-overlay-subtle)]`}>
-      <div className={`absolute right-4 top-0 z-10 -translate-y-1/2 items-center gap-1 rounded-md bg-[var(--color-panel)] p-1 shadow-md ${toolbarPinned ? 'flex' : 'hidden group-hover:flex'}`}>
+      <div className={`absolute right-4 top-0 z-10 -translate-y-1/2 items-center gap-px border border-[var(--color-divider)] bg-[var(--color-panel-2)] p-px ${toolbarPinned ? 'flex' : 'hidden group-hover:flex'}`}>
         <DropdownMenu open={reactionMenuOpen} onOpenChange={setReactionMenuOpen}>
           <Tooltip>
             <TooltipTrigger
@@ -155,7 +155,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
                   key={r}
                   type="button"
                   onClick={() => onReact(r)}
-                  className="rounded px-2 py-1 text-base hover:bg-[var(--color-hover-overlay)]"
+                  className="px-2 py-1 text-base transition-colors hover:bg-[var(--color-hover-overlay)]"
                 >
                   {r}
                 </button>
@@ -248,7 +248,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
           <button
             type="button"
             onClick={showProfileCardAt}
-            className="block h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+            className="block h-10 w-10 focus:outline-none focus:ring-1 focus:ring-[var(--color-text-strong)]"
             aria-label={`Profile — ${entry.senderDisplayName}`}
           >
             <AuthedImage
@@ -256,17 +256,17 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
               mxc={senderMxcAvatar}
               width={40}
               height={40}
-              className="h-10 w-10 rounded-full bg-[var(--color-surface)] object-cover"
+              className="h-10 w-10 bg-[var(--color-surface)] object-cover"
               fallback={
                 <InitialBadge
                   text={entry.senderDisplayName}
-                  className="h-10 w-10 rounded-full text-base"
+                  className="h-10 w-10 text-base uppercase tracking-wide"
                 />
               }
             />
           </button>
         ) : (
-          <span className="invisible select-none text-[10px] leading-[1.375rem] text-[var(--color-text-faint)] group-hover:visible">
+          <span className="invisible select-none font-mono text-[10px] leading-[1.375rem] text-[var(--color-text-faint)] tabular-nums group-hover:visible">
             {formatTime24(entry.ts)}
           </span>
         )}
@@ -278,11 +278,11 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
             <button
               type="button"
               onClick={showProfileCardAt}
-              className="font-semibold text-[var(--color-text-strong)] hover:underline"
+              className="text-sm font-semibold text-[var(--color-text-strong)] hover:underline"
             >
               {entry.senderDisplayName}
             </button>
-            <span className="text-[11px] text-[var(--color-text-faint)]">
+            <span className="font-mono text-[10px] text-[var(--color-text-faint)] tabular-nums">
               {formatTime24(entry.ts)}
             </span>
             {entry.isEncrypted && <Lock className="h-3 w-3 text-emerald-500" />}
@@ -322,7 +322,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
                 alt: content.body ?? '',
               })
             }
-            className="block cursor-zoom-in rounded"
+            className="block cursor-zoom-in border border-[var(--color-divider)]"
             title="Click to expand"
           >
             <AuthedImage
@@ -333,7 +333,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
               width={480}
               height={320}
               alt={content.body ?? ''}
-              style={{ maxWidth: 480, maxHeight: 320, borderRadius: 8 }}
+              style={{ maxWidth: 480, maxHeight: 320 }}
               fallback={
                 <span className="text-sm text-[var(--color-text-muted)]">
                   {content.body || 'image'}
@@ -351,7 +351,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
           />
         ) : (
           <div
-            className="prose dark:prose-invert max-w-none text-sm leading-relaxed text-[var(--color-text)] [&_a]:text-sky-400 [&_code]:rounded [&_code]:bg-[var(--color-code-bg)] [&_code]:px-1"
+            className="prose dark:prose-invert max-w-none text-sm leading-relaxed text-[var(--color-text)] [&_a]:text-[var(--color-text-strong)] [&_a]:underline [&_a]:underline-offset-2 [&_code]:bg-[var(--color-code-bg)] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.85em] [&_pre]:bg-[var(--color-code-bg)] [&_pre]:p-3 [&_pre]:font-mono [&_pre]:text-xs"
             dangerouslySetInnerHTML={{ __html: renderedHtml }}
           />
         )}
@@ -361,13 +361,18 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
           </span>
         )}
         {Object.keys(entry.reactions).length > 0 && (
-          <div className="mt-1 flex flex-wrap gap-1">
+          <div className="mt-1.5 flex flex-wrap gap-1">
             {Object.entries(entry.reactions).map(([key, info]) => (
               <span
                 key={key}
-                className={`rounded-full px-2 py-0.5 text-xs ${info.byMe ? 'bg-[var(--color-accent)] text-white' : 'bg-[var(--color-surface)] text-[var(--color-text-muted)]'}`}
+                className={`flex items-center gap-1 border px-1.5 py-0.5 text-xs tabular-nums transition-colors ${
+                  info.byMe
+                    ? 'border-[var(--color-text-strong)] bg-[var(--color-surface)] text-[var(--color-text-strong)]'
+                    : 'border-[var(--color-divider)] bg-[var(--color-panel-2)] text-[var(--color-text-muted)]'
+                }`}
               >
-                {key} {info.count}
+                <span>{key}</span>
+                <span className="font-mono text-[10px]">{info.count}</span>
               </span>
             ))}
           </div>
@@ -404,13 +409,4 @@ function FileDownloadLink({
 function formatTime24(ts: number): string {
   const d = new Date(ts);
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }

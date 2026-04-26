@@ -32,7 +32,7 @@ export function TitleBar() {
 
   return (
     <div className="titlebar-strip flex items-center justify-center border-b border-[var(--color-divider)] bg-[var(--color-rail)] pl-[80px] pr-[80px]">
-      <div className="flex min-w-0 max-w-full items-center gap-2 text-sm font-semibold text-[var(--color-text-strong)]">
+      <div className="flex min-w-0 max-w-full items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-text-strong)]">
         {activeSpace ? (
           <>
             <AuthedImage
@@ -40,9 +40,9 @@ export function TitleBar() {
               mxc={activeSpace.avatarMxc}
               width={40}
               height={40}
-              className="h-5 w-5 shrink-0 rounded-full bg-[var(--color-surface)] object-cover"
+              className="h-4 w-4 shrink-0 bg-[var(--color-surface)] object-cover"
               fallback={
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)] text-[10px] font-semibold text-white">
+                <span className="flex h-4 w-4 shrink-0 items-center justify-center bg-[var(--color-surface)] text-[10px] font-semibold text-[var(--color-text-strong)]">
                   {initialFrom(activeSpace.name)}
                 </span>
               }
@@ -51,7 +51,7 @@ export function TitleBar() {
           </>
         ) : (
           <>
-            <Home className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" />
+            <Home className="h-3.5 w-3.5 shrink-0 text-[var(--color-text-muted)]" strokeWidth={1.75} />
             <span className="truncate">Direct Messages</span>
           </>
         )}

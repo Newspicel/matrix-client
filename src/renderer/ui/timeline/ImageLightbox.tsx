@@ -31,7 +31,7 @@ export function ImageLightbox() {
               file={(lightbox.file as EncryptedFile | null) ?? null}
               mimetype={lightbox.mimetype}
               alt={lightbox.alt ?? ''}
-              className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
+              className="max-h-[90vh] max-w-[90vw] object-contain"
               fallback={
                 <span className="text-sm text-[var(--color-text-muted)]">loading…</span>
               }
