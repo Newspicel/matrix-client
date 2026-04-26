@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { MatrixEvent, Room, RoomMember, RoomState } from 'matrix-js-sdk';
-import { RoomStateEvent } from 'matrix-js-sdk';
+import { RoomEvent, RoomStateEvent } from 'matrix-js-sdk';
 import { useAccountsStore } from '@/state/accounts';
 import { useUiStore } from '@/state/ui';
 import { accountManager } from '@/matrix/AccountManager';
@@ -74,15 +74,28 @@ export function MemberList() {
       if (event.getType() === POWER_LEVEL_TAGS_EVENT) rebuildTags();
       if (event.getType() === 'm.room.power_levels') rebuildMembers();
     };
+    // After accepting an invite the room transitions from stripped state to
+    // full joined state — re-fetch members (loadMembersIfNeeded short-circuits
+    // for invites because there's nothing to load) so the list populates.
+    const onMyMembership = () => {
+      room
+        .loadMembersIfNeeded()
+        .then(rebuildMembers)
+        .catch(() => {});
+      rebuildMembers();
+      rebuildTags();
+    };
     room.currentState.on(RoomStateEvent.Members, onMembers);
     room.currentState.on(RoomStateEvent.NewMember, onMembers);
     room.currentState.on(RoomStateEvent.Events, onEvents);
+    room.on(RoomEvent.MyMembership, onMyMembership);
 
     return () => {
       cancelled = true;
       room.currentState.off(RoomStateEvent.Members, onMembers);
       room.currentState.off(RoomStateEvent.NewMember, onMembers);
       room.currentState.off(RoomStateEvent.Events, onEvents);
+      room.off(RoomEvent.MyMembership, onMyMembership);
     };
   }, [client, activeRoomId]);
 
