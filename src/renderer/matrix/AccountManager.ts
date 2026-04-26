@@ -108,6 +108,13 @@ class AccountManager {
       useRoomsStore.getState().refreshRooms(metadata.id, client);
     });
 
+    // Membership transitions (invite → join, invite → leave, etc.) need to
+    // re-summarize so a request leaves the list as soon as it's accepted or
+    // declined.
+    client.on(RoomEvent.MyMembership, () => {
+      useRoomsStore.getState().refreshRooms(metadata.id, client);
+    });
+
     client.on(RoomEvent.Timeline, (event, room, toStartOfTimeline) => {
       if (!room) return;
       useTimelineStore.getState().onTimelineAppend(metadata.id, room.roomId, client);

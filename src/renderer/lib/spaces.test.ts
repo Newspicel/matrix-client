@@ -14,6 +14,8 @@ function room(
     isSpace: false,
     isVoice: false,
     isEncrypted: false,
+    isInvite: false,
+    inviterUserId: null,
     memberCount: 1,
     unread: 0,
     highlights: 0,

@@ -7,6 +7,7 @@ import { VoiceChannelView } from '@/ui/rtc/VoiceChannelView';
 import { useUiStore } from '@/state/ui';
 import { startCall } from '@/matrix/rtc/RtcSession';
 import { accountManager } from '@/matrix/AccountManager';
+import { RequestBanner } from '@/ui/shell/RequestBanner';
 
 export function MainPane() {
   const activeAccountId = useAccountsStore((s) => s.activeAccountId);
@@ -20,10 +21,10 @@ export function MainPane() {
     return rooms.find((r) => r.roomId === activeRoomId) ?? null;
   });
 
+  const client = activeAccountId ? accountManager.getClient(activeAccountId) ?? null : null;
+
   async function onStartCall() {
-    if (!activeAccountId || !activeRoomId) return;
-    const client = accountManager.getClient(activeAccountId);
-    if (!client) return;
+    if (!activeAccountId || !activeRoomId || !client) return;
     await startCall(client, activeAccountId, activeRoomId);
   }
 
@@ -48,7 +49,7 @@ export function MainPane() {
           )}
         </div>
         <div className="flex items-center">
-          {room && !room.isVoice && (
+          {room && !room.isVoice && !room.isInvite && (
             <button
               type="button"
               className="flex h-8 w-8 items-center justify-center text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
@@ -58,18 +59,22 @@ export function MainPane() {
               <Phone className="h-4 w-4" strokeWidth={1.75} />
             </button>
           )}
-          <button
-            type="button"
-            className="flex h-8 w-8 items-center justify-center text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
-            title="Toggle member list"
-            onClick={toggleMembers}
-          >
-            <Users className="h-4 w-4" strokeWidth={1.75} />
-          </button>
+          {!room?.isInvite && (
+            <button
+              type="button"
+              className="flex h-8 w-8 items-center justify-center text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]"
+              title="Toggle member list"
+              onClick={toggleMembers}
+            >
+              <Users className="h-4 w-4" strokeWidth={1.75} />
+            </button>
+          )}
         </div>
       </header>
 
-      {room?.isVoice ? (
+      {room?.isInvite && client ? (
+        <RequestBanner room={room} client={client} />
+      ) : room?.isVoice ? (
         <VoiceChannelView room={room} />
       ) : (
         <>

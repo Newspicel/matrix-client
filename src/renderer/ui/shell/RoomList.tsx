@@ -33,24 +33,29 @@ export function RoomList() {
     () => (activeSpaceId ? [] : getHomeRooms(allRooms)),
     [allRooms, activeSpaceId],
   );
+  const dmRequests = useMemo(
+    () => (activeSpaceId ? [] : getDmRequests(allRooms)),
+    [allRooms, activeSpaceId],
+  );
 
   const viewKey = activeAccountId ? viewKeyFor(activeAccountId, activeSpaceId) : null;
 
   // Pick a default room when entering a view that has none selected. Prefer
   // the last-selected room for this view if it still exists; otherwise the
-  // first available room.
+  // first available room. Requests are eligible too — auto-selecting one
+  // surfaces the accept/decline UI without an extra click.
   useEffect(() => {
     if (!activeAccountId || !viewKey) return;
     if (activeRoomId) return;
     const candidateIds = activeSpace
       ? flattenSpaceRoomIds(allRooms, activeSpace)
-      : homeRooms.map((r) => r.roomId);
+      : [...homeRooms, ...dmRequests].map((r) => r.roomId);
     if (candidateIds.length === 0) return;
     const remembered = lastRoomByView[viewKey];
     const pick =
       remembered && candidateIds.includes(remembered) ? remembered : candidateIds[0];
     setActiveRoom(pick);
-  }, [activeAccountId, viewKey, activeRoomId, activeSpace, allRooms, homeRooms, lastRoomByView, setActiveRoom]);
+  }, [activeAccountId, viewKey, activeRoomId, activeSpace, allRooms, homeRooms, dmRequests, lastRoomByView, setActiveRoom]);
 
   useEffect(() => {
     if (viewKey && activeRoomId) rememberRoomForView(viewKey, activeRoomId);
@@ -78,6 +83,7 @@ export function RoomList() {
         ) : (
           <HomeView
             rooms={homeRooms}
+            requests={dmRequests}
             activeRoomId={activeRoomId}
             onSelect={setActiveRoom}
             client={client}
@@ -90,11 +96,17 @@ export function RoomList() {
 }
 
 function getHomeRooms(rooms: RoomSummary[]): RoomSummary[] {
-  const dms = rooms.filter((r) => !r.isSpace && r.isDirect);
+  const dms = rooms.filter((r) => !r.isSpace && r.isDirect && !r.isInvite);
   const orphans = getOrphanRooms(rooms);
   const merged = [...dms, ...orphans];
   merged.sort((a, b) => b.lastActivity - a.lastActivity);
   return merged;
+}
+
+function getDmRequests(rooms: RoomSummary[]): RoomSummary[] {
+  const requests = rooms.filter((r) => !r.isSpace && r.isDirect && r.isInvite);
+  requests.sort((a, b) => b.lastActivity - a.lastActivity);
+  return requests;
 }
 
 function flattenSpaceRoomIds(rooms: RoomSummary[], space: RoomSummary): string[] {
@@ -108,16 +120,18 @@ function flattenSpaceRoomIds(rooms: RoomSummary[], space: RoomSummary): string[]
 
 function HomeView({
   rooms,
+  requests,
   activeRoomId,
   onSelect,
   client,
 }: {
   rooms: RoomSummary[];
+  requests: RoomSummary[];
   activeRoomId: string | null;
   onSelect: (roomId: string) => void;
   client: MatrixClient | null;
 }) {
-  if (rooms.length === 0) {
+  if (rooms.length === 0 && requests.length === 0) {
     return (
       <p className="px-2 pt-4 text-xs italic text-[var(--color-text-faint)]">
         No direct messages yet.
@@ -126,21 +140,46 @@ function HomeView({
   }
 
   return (
-    <div>
-      <div className="px-2 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
-        Direct messages
-      </div>
-      <ul className="space-y-px">
-        {rooms.map((r) => (
-          <RoomRow
-            key={r.roomId}
-            room={r}
-            active={r.roomId === activeRoomId}
-            onClick={() => onSelect(r.roomId)}
-            client={client}
-          />
-        ))}
-      </ul>
+    <div className="space-y-2">
+      {requests.length > 0 && (
+        <div>
+          <div className="flex items-center gap-1.5 px-2 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
+            <span>Requests</span>
+            <span className="bg-[var(--color-text-muted)] px-1.5 text-[10px] font-bold text-[var(--color-panel)]">
+              {requests.length}
+            </span>
+          </div>
+          <ul className="space-y-px">
+            {requests.map((r) => (
+              <RoomRow
+                key={r.roomId}
+                room={r}
+                active={r.roomId === activeRoomId}
+                onClick={() => onSelect(r.roomId)}
+                client={client}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
+      {rooms.length > 0 && (
+        <div>
+          <div className="px-2 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
+            Direct messages
+          </div>
+          <ul className="space-y-px">
+            {rooms.map((r) => (
+              <RoomRow
+                key={r.roomId}
+                room={r}
+                active={r.roomId === activeRoomId}
+                onClick={() => onSelect(r.roomId)}
+                client={client}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

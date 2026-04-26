@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { MatrixClient, Room } from 'matrix-js-sdk';
 import { EventType, NotificationCountType } from 'matrix-js-sdk';
+import { KnownMembership } from 'matrix-js-sdk/lib/@types/membership';
 
 // Voice/video "room" types used in the wild. Matrix has no single standard;
 // MSC3417 (`m.call`) is what Element Call rooms carry, and several older
@@ -20,6 +21,8 @@ export interface RoomSummary {
   isSpace: boolean;
   isVoice: boolean;
   isEncrypted: boolean;
+  isInvite: boolean;
+  inviterUserId: string | null;
   memberCount: number;
   unread: number;
   highlights: number;
@@ -42,11 +45,18 @@ function summarize(room: Room, client: MatrixClient): RoomSummary {
 
   const ownUserId = client.getUserId() ?? '';
   const memberEvent = room.getMember(ownUserId);
+  const isInvite = room.getMyMembership() === KnownMembership.Invite;
+
+  // For invites the m.direct account-data event hasn't been written yet on
+  // the receiving side. Fall back to the is_direct flag on our own membership
+  // event (exposed by the SDK as getDMInviter), which is what the inviter
+  // sets when starting a DM.
   const directContent = client
     .getAccountData(EventType.Direct)
     ?.getContent<Record<string, string[]>>();
   const directRoomIds = directContent ? Object.values(directContent).flat() : [];
-  const isDirect = directRoomIds.includes(room.roomId);
+  const inviterUserId = isInvite ? memberEvent?.getDMInviter() ?? null : null;
+  const isDirect = directRoomIds.includes(room.roomId) || (isInvite && !!inviterUserId);
 
   const parentSpaces = room.currentState
     .getStateEvents('m.space.parent')
@@ -70,12 +80,17 @@ function summarize(room: Room, client: MatrixClient): RoomSummary {
   let dmUserId: string | null = null;
   let dmAvatarMxc: string | null = null;
   if (isDirect) {
-    const other = room
-      .getJoinedMembers()
-      .find((m) => m.userId !== ownUserId);
-    if (other) {
-      dmUserId = other.userId;
-      dmAvatarMxc = other.getMxcAvatarUrl() ?? null;
+    if (isInvite && inviterUserId) {
+      dmUserId = inviterUserId;
+      dmAvatarMxc = room.getMember(inviterUserId)?.getMxcAvatarUrl() ?? null;
+    } else {
+      const other = room
+        .getJoinedMembers()
+        .find((m) => m.userId !== ownUserId);
+      if (other) {
+        dmUserId = other.userId;
+        dmAvatarMxc = other.getMxcAvatarUrl() ?? null;
+      }
     }
   }
 
@@ -88,6 +103,8 @@ function summarize(room: Room, client: MatrixClient): RoomSummary {
     isSpace,
     isVoice,
     isEncrypted: room.hasEncryptionStateEvent(),
+    isInvite,
+    inviterUserId,
     memberCount: room.getJoinedMemberCount(),
     unread: room.getUnreadNotificationCount(),
     highlights: room.getUnreadNotificationCount(NotificationCountType.Highlight),

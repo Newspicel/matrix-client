@@ -199,7 +199,7 @@ function HomeButton({
           className={cn(
             'group flex h-10 w-10 items-center justify-center transition-colors duration-150',
             active
-              ? 'bg-[var(--color-text-strong)] text-[var(--color-bg)]'
+              ? 'bg-[var(--color-surface)] text-[var(--color-text-strong)]'
               : 'text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]',
           )}
         >
@@ -232,7 +232,7 @@ function SpaceButton({
           className={cn(
             'group relative flex h-10 w-10 items-center justify-center overflow-hidden text-[var(--color-text-muted)] transition-all duration-150',
             active
-              ? 'ring-2 ring-inset ring-[var(--color-text-strong)]'
+              ? 'ring-2 ring-inset ring-[var(--color-text-muted)]'
               : 'opacity-80 hover:opacity-100',
           )}
         >
