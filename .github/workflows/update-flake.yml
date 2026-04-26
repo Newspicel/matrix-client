@@ -1,0 +1,92 @@
+name: Update flake
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    name: Refresh flake.lock and pnpmDeps hash
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+          # Allow `git push` later in this job.
+          persist-credentials: true
+
+      - name: Bump version in flake.nix
+        if: github.event_name == 'release'
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::notice::Tag $TAG is not a stable semver release; leaving flake version untouched"
+            exit 0
+          fi
+          sed -i -E "s|^([[:space:]]*version[[:space:]]*=[[:space:]]*\")[^\"]+(\";)|\1${version}\2|" flake.nix
+          grep -E '^\s*version\s*=' flake.nix
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Update flake inputs
+        run: nix flake update
+
+      - name: Build (and patch pnpmDeps hash on lockfile drift)
+        run: |
+          set +e
+          log=$(nix build .#lattice --no-link --print-build-logs 2>&1)
+          status=$?
+          set -e
+          printf '%s\n' "$log"
+          if [ "$status" -eq 0 ]; then
+            exit 0
+          fi
+          if ! printf '%s\n' "$log" | grep -q 'hash mismatch'; then
+            echo "::error::nix build failed for a reason other than a pnpmDeps hash mismatch" >&2
+            exit "$status"
+          fi
+          expected=$(printf '%s\n' "$log" | grep -oE 'got:[[:space:]]+sha256-[A-Za-z0-9+/=]+' | head -1 | awk '{print $2}')
+          if [ -z "$expected" ]; then
+            echo "::error::Hash mismatch detected but could not extract the expected hash" >&2
+            exit 1
+          fi
+          echo "Patching pnpmDeps.hash to $expected"
+          # Replace either the bootstrap fakeHash or a stale pinned hash.
+          sed -i "s|hash = lib\.fakeHash;|hash = \"${expected}\";|" flake.nix
+          sed -i -E "s|hash = \"sha256-[A-Za-z0-9+/=]+\";|hash = \"${expected}\";|" flake.nix
+          grep -E '^\s*hash\s*=' flake.nix
+          nix build .#lattice --no-link --print-build-logs
+
+      - name: Commit and push
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- flake.nix flake.lock; then
+            echo "Nothing to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add flake.nix flake.lock
+          msg="chore(flake): refresh lock and pnpmDeps"
+          if [ -n "${TAG:-}" ]; then
+            msg="chore(flake): refresh lock and pnpmDeps for ${TAG}"
+          fi
+          git commit -m "$msg"
+          git push origin HEAD:main
