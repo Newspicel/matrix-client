@@ -28,6 +28,12 @@
         pkgs.appimageTools.wrapType2 {
           inherit pname version src;
 
+          # Sourced inside the FHS-env wrapper before the AppImage launches,
+          # so the app skips its in-app electron-updater flow on NixOS.
+          profile = ''
+            export LATTICE_DISABLE_AUTO_UPDATE=1
+          '';
+
           extraInstallCommands = ''
             install -Dm644 ${appimageContents}/${pname}.desktop \
               $out/share/applications/${pname}.desktop
@@ -35,15 +41,9 @@
               $out/share/icons/hicolor/512x512/apps/${pname}.png
 
             substituteInPlace $out/share/applications/${pname}.desktop \
-              --replace 'Exec=AppRun --no-sandbox %U' 'Exec=${pname} %U' \
-              --replace 'Exec=AppRun %U' 'Exec=${pname} %U' \
-              --replace 'Exec=AppRun' 'Exec=${pname}'
-
-            # Re-wrap the binary so the app sees LATTICE_DISABLE_AUTO_UPDATE=1
-            # and skips the in-app electron-updater flow on NixOS.
-            mv $out/bin/${pname} $out/bin/.${pname}-unwrapped
-            makeWrapper $out/bin/.${pname}-unwrapped $out/bin/${pname} \
-              --set LATTICE_DISABLE_AUTO_UPDATE 1
+              --replace-quiet 'Exec=AppRun --no-sandbox %U' 'Exec=${pname} %U' \
+              --replace-quiet 'Exec=AppRun %U' 'Exec=${pname} %U' \
+              --replace-quiet 'Exec=AppRun' 'Exec=${pname}'
           '';
 
           meta = {
