@@ -17,8 +17,10 @@ import { ProfileCard } from '@/ui/shell/ProfileCard';
 import { CommandPalette } from '@/ui/shell/CommandPalette';
 import { TooltipProvider } from '@/ui/primitives/tooltip';
 import { Toaster } from '@/ui/primitives/sonner';
+import { useApplyTheme } from '@/lib/theme';
 
 export function App() {
+  useApplyTheme();
   const [booting, setBooting] = useState(true);
   const hasAccounts = useAccountsStore((s) => Object.keys(s.accounts).length > 0);
   const memberListOpen = useUiStore((s) => s.memberListOpen);

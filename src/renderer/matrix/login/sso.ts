@@ -2,7 +2,7 @@ import type { IIdentityProvider, ISSOFlow } from 'matrix-js-sdk';
 import { buildLoginClient } from '../createClient';
 import type { ClientCredentials } from '../createClient';
 
-const SSO_REDIRECT = 'matrix-client://sso-callback';
+const SSO_REDIRECT = 'lattice://sso-callback';
 
 export interface SsoFlowsResult {
   homeserverUrl: string;
@@ -31,7 +31,7 @@ export function buildSsoRedirectUrl(homeserverUrl: string, idpId?: string): stri
 export async function loginWithSsoToken(
   homeserverUrl: string,
   loginToken: string,
-  initialDeviceDisplayName = 'Matrix Client (desktop)',
+  initialDeviceDisplayName = 'Lattice (desktop)',
 ): Promise<ClientCredentials> {
   const client = buildLoginClient(homeserverUrl);
   const response = await client.loginRequest({

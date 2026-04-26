@@ -1,5 +1,5 @@
-appId: dev.matrix-client.app
-productName: Matrix Client
+appId: dev.newspicel.lattice
+productName: Lattice
 directories:
   buildResources: resources
   output: dist
@@ -34,9 +34,14 @@ linux:
     - deb
     - rpm
   category: Network
-  maintainer: matrix-client
+  maintainer: Newspicel
 protocols:
-  - name: Matrix Client SSO
+  - name: Lattice SSO
     schemes:
-      - matrix-client
+      - lattice
+publish:
+  - provider: github
+    owner: Newspicel
+    repo: lattice
+    releaseType: release
 npmRebuild: false

@@ -1,7 +1,7 @@
 import { app, BrowserWindow } from 'electron';
 import { IpcChannels } from '@shared/ipc-channels';
 
-const PROTOCOL = 'matrix-client';
+const PROTOCOL = 'lattice';
 
 export function registerDeepLinkProtocol(): void {
   if (process.defaultApp) {

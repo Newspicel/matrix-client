@@ -173,7 +173,7 @@ export function AccountPanel({
             />
             <Button
               type="button"
-              size="sm"
+              size="lg"
               onClick={onSaveName}
               disabled={!nameDirty || savingName || !client}
             >

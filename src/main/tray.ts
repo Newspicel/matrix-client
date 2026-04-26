@@ -8,7 +8,7 @@ export function initTray(getWindow: () => BrowserWindow | null): void {
   const iconPath = join(app.getAppPath(), 'resources', 'tray', 'icon.png');
   const image = nativeImage.createFromPath(iconPath);
   tray = new Tray(image.isEmpty() ? nativeImage.createEmpty() : image);
-  tray.setToolTip('Matrix Client');
+  tray.setToolTip('Lattice');
   tray.setContextMenu(
     Menu.buildFromTemplate([
       {
@@ -30,7 +30,7 @@ export function initTray(getWindow: () => BrowserWindow | null): void {
     if (process.platform === 'darwin') {
       app.setBadgeCount(count);
     } else if (tray) {
-      tray.setToolTip(count > 0 ? `Matrix Client — ${count} unread` : 'Matrix Client');
+      tray.setToolTip(count > 0 ? `Lattice — ${count} unread` : 'Lattice');
     }
   });
 }

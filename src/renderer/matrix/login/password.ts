@@ -12,7 +12,7 @@ export async function loginWithPassword({
   homeserverUrl,
   username,
   password,
-  initialDeviceDisplayName = 'Matrix Client (desktop)',
+  initialDeviceDisplayName = 'Lattice (desktop)',
 }: PasswordLoginInput): Promise<ClientCredentials> {
   const client = buildLoginClient(homeserverUrl);
 

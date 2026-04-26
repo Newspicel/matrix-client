@@ -81,7 +81,7 @@ if (!singleInstanceLock) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
     }
-    const deepLinkArg = argv.find((a) => a.startsWith('matrix-client://'));
+    const deepLinkArg = argv.find((a) => a.startsWith('lattice://'));
     if (deepLinkArg) handleDeepLinkUrl(deepLinkArg, mainWindow);
   });
 
@@ -93,7 +93,7 @@ if (!singleInstanceLock) {
   });
 
   app.whenReady().then(() => {
-    electronApp.setAppUserModelId('dev.matrix-client.app');
+    electronApp.setAppUserModelId('dev.newspicel.lattice');
 
     app.on('browser-window-created', (_e, window) => {
       optimizer.watchWindowShortcuts(window);

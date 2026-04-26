@@ -75,38 +75,39 @@
   color-scheme: dark;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color-scheme: light;
+/* Light theme palette. Applied either when the user has explicitly chosen
+   "light" via Settings (data-theme="light"), or when "system" / no override
+   is set and the OS reports a light preference. The dark theme is the bare
+   :root above, so data-theme="dark" needs no extra rules. */
+:root[data-theme='light'],
+:root[data-theme='system']:where([data-system-scheme='light']) {
+  color-scheme: light;
 
-    /* Light mode mirrors the rectilinear hierarchy. The canvas is paper-white,
-       panels sit slightly tinted, and 1px borders darken the divider. */
-    --color-rail: #f4f4f5;
-    --color-rail-hover: #e4e4e7;
-    --color-panel: #fafafa;
-    --color-panel-2: #ffffff;
-    --color-surface: #f0f0f2;
-    --color-divider: #e4e4e7;
+  --color-rail: #f4f4f5;
+  --color-rail-hover: #e4e4e7;
+  --color-panel: #fafafa;
+  --color-panel-2: #ffffff;
+  --color-surface: #f0f0f2;
+  --color-divider: #e4e4e7;
 
-    --color-bg: #ffffff;
-    --color-text: #18181b;
-    --color-text-strong: #050507;
-    --color-text-muted: #6b6b73;
-    --color-text-faint: #9a9aa2;
+  --color-bg: #ffffff;
+  --color-text: #18181b;
+  --color-text-strong: #050507;
+  --color-text-muted: #6b6b73;
+  --color-text-faint: #9a9aa2;
 
-    --color-hover-overlay: rgba(0, 0, 0, 0.05);
-    --color-hover-overlay-subtle: rgba(0, 0, 0, 0.025);
-    --color-backdrop: rgba(15, 17, 22, 0.4);
-    --color-backdrop-strong: rgba(15, 17, 22, 0.6);
-    --color-code-bg: rgba(0, 0, 0, 0.05);
+  --color-hover-overlay: rgba(0, 0, 0, 0.05);
+  --color-hover-overlay-subtle: rgba(0, 0, 0, 0.025);
+  --color-backdrop: rgba(15, 17, 22, 0.4);
+  --color-backdrop-strong: rgba(15, 17, 22, 0.6);
+  --color-code-bg: rgba(0, 0, 0, 0.05);
 
-    --color-scrollbar-thumb: #d4d4d8;
-    --color-scrollbar-thumb-hover: #a1a1a8;
+  --color-scrollbar-thumb: #d4d4d8;
+  --color-scrollbar-thumb-hover: #a1a1a8;
 
-    --color-accent: #18181b;
-    --color-accent-hover: #27272a;
-    --color-primary-foreground: #fafafa;
-  }
+  --color-accent: #18181b;
+  --color-accent-hover: #27272a;
+  --color-primary-foreground: #fafafa;
 }
 
 html,

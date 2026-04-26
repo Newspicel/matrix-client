@@ -1,12 +1,29 @@
 import { useState } from 'react';
-import { Plus, X } from 'lucide-react';
-import { useUiStore } from '@/state/ui';
+import { Monitor, Moon, Plus, Sun, X } from 'lucide-react';
+import { useUiStore, type ThemePreference } from '@/state/ui';
 import { EmojiPicker } from '@/ui/primitives/emoji-picker';
-import { SettingsPanel, SettingsSection } from './SettingsPrimitives';
+import { cn } from '@/lib/utils';
+import { SettingsPanel, SettingsRow, SettingsSection } from './SettingsPrimitives';
+
+const THEME_OPTIONS: ReadonlyArray<{
+  value: ThemePreference;
+  label: string;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+}> = [
+  { value: 'system', label: 'System', icon: Monitor },
+  { value: 'dark', label: 'Dark', icon: Moon },
+  { value: 'light', label: 'Light', icon: Sun },
+];
 
 export function GeneralPanel() {
   return (
     <SettingsPanel title="General">
+      <SettingsSection label="Appearance">
+        <SettingsRow label="Theme" hint="Switch the app between dark, light, or your OS preference.">
+          <ThemePicker />
+        </SettingsRow>
+      </SettingsSection>
+
       <SettingsSection label="Quick reactions">
         <p className="text-xs text-[var(--color-text-muted)]">
           Emojis shown on hover over a message. Click a slot to change it, or use the “+” to add
@@ -15,6 +32,42 @@ export function GeneralPanel() {
         <QuickReactionsEditor />
       </SettingsSection>
     </SettingsPanel>
+  );
+}
+
+function ThemePicker() {
+  const theme = useUiStore((s) => s.theme);
+  const setTheme = useUiStore((s) => s.setTheme);
+
+  return (
+    <div
+      role="radiogroup"
+      aria-label="Theme"
+      className="inline-flex border border-[var(--color-divider)] bg-[var(--color-panel)]"
+    >
+      {THEME_OPTIONS.map((option) => {
+        const Icon = option.icon;
+        const active = theme === option.value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            onClick={() => setTheme(option.value)}
+            className={cn(
+              'flex h-8 items-center gap-1.5 px-2.5 text-xs font-medium transition-colors',
+              active
+                ? 'bg-[var(--color-surface)] text-[var(--color-text-strong)]'
+                : 'text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-strong)]',
+            )}
+          >
+            <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

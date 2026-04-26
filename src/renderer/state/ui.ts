@@ -22,7 +22,12 @@ export interface ProfileCardTarget {
 
 const DEFAULT_REACTIONS = ['👍', '❤️', '😂', '🎉', '🙏'];
 
+export type ThemePreference = 'system' | 'dark' | 'light';
+
 interface UiState {
+  theme: ThemePreference;
+  setTheme: (theme: ThemePreference) => void;
+
   memberListOpen: boolean;
   toggleMemberList: () => void;
   setMemberListOpen: (open: boolean) => void;
@@ -61,6 +66,9 @@ interface UiState {
 export const useUiStore = create<UiState>()(
   persist(
     (set) => ({
+      theme: 'system',
+      setTheme: (theme) => set({ theme }),
+
       memberListOpen: true,
       toggleMemberList: () => set((s) => ({ memberListOpen: !s.memberListOpen })),
       setMemberListOpen: (open) => set({ memberListOpen: open }),
@@ -108,6 +116,7 @@ export const useUiStore = create<UiState>()(
         quickReactions: state.quickReactions,
         lastRoomByView: state.lastRoomByView,
         memberListOpen: state.memberListOpen,
+        theme: state.theme,
       }),
     },
   ),
