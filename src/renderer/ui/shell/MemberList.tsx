@@ -40,9 +40,15 @@ export function MemberList() {
   const [members, setMembers] = useState<MemberView[]>([]);
   const [tags, setTags] = useState<PowerLevelTags | null>(null);
 
-  useEffect(() => {
+  const memberKey = `${activeAccountId ?? ''}:${activeRoomId ?? ''}`;
+  const [prevMemberKey, setPrevMemberKey] = useState(memberKey);
+  if (prevMemberKey !== memberKey) {
+    setPrevMemberKey(memberKey);
     setMembers([]);
     setTags(null);
+  }
+
+  useEffect(() => {
     if (!client || !activeRoomId) return;
     const room = client.getRoom(activeRoomId);
     if (!room) return;

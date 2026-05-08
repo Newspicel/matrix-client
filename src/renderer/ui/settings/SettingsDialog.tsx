@@ -72,11 +72,9 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
   const [sas, setSas] = useState<SasHandle | null>(null);
 
   // If the selected account disappears (sign-out), fall back to General.
-  useEffect(() => {
-    if (tab.scope === 'account' && !accounts[tab.accountId]) {
-      setTab({ scope: 'client', id: 'general' });
-    }
-  }, [tab, accounts]);
+  if (tab.scope === 'account' && !accounts[tab.accountId]) {
+    setTab({ scope: 'client', id: 'general' });
+  }
 
   // Incoming verification requests can arrive on any signed-in account.
   // Show them as a modal on top of the settings dialog regardless of which

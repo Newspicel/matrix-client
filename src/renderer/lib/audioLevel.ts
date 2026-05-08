@@ -22,10 +22,7 @@ export function useMicLevel(opts: AudioLevelOptions): {
   const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!opts.enabled) {
-      setLevel(0);
-      return;
-    }
+    if (!opts.enabled) return;
     let cancelled = false;
     let stream: MediaStream | null = null;
     let ctx: AudioContext | null = null;
@@ -94,5 +91,5 @@ export function useMicLevel(opts: AudioLevelOptions): {
     opts.autoGainControl,
   ]);
 
-  return { level, error };
+  return { level: opts.enabled ? level : 0, error };
 }

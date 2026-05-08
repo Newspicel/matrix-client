@@ -81,16 +81,21 @@ function VoiceLobby({
 }) {
   const activeAccountId = useAccountsStore((s) => s.activeAccountId);
   const activeCall = useRtcStore((s) => s.activeCall);
-  const [members, setMembers] = useState<VoiceMember[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!client) return;
-    const mxRoom = client.getRoom(room.roomId);
-    if (!mxRoom) return;
-    setMembers(readMembers(mxRoom));
+  const mxRoom = client?.getRoom(room.roomId) ?? null;
+  const [members, setMembers] = useState<VoiceMember[]>(() =>
+    mxRoom ? readMembers(mxRoom) : [],
+  );
+  const [prevMxRoom, setPrevMxRoom] = useState(mxRoom);
+  if (prevMxRoom !== mxRoom) {
+    setPrevMxRoom(mxRoom);
+    setMembers(mxRoom ? readMembers(mxRoom) : []);
+  }
 
+  useEffect(() => {
+    if (!mxRoom) return;
     const onEvents = (_ev: MatrixEvent, state: RoomState) => {
       if (state.roomId !== mxRoom.roomId) return;
       setMembers(readMembers(mxRoom));
@@ -99,7 +104,7 @@ function VoiceLobby({
     return () => {
       mxRoom.currentState.off(RoomStateEvent.Events, onEvents);
     };
-  }, [client, room.roomId]);
+  }, [mxRoom]);
 
   async function onJoin() {
     if (!client || !activeAccountId) return;
@@ -324,7 +329,7 @@ function ToolbarButton({
 }
 
 function CallDuration({ startedAt }: { startedAt: number }) {
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);

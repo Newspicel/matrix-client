@@ -156,7 +156,12 @@ export function Timeline() {
       creatorName,
       createdAt: createEvent?.getTs() ?? null,
     };
-  }, [activeAccountId, activeRoomId, roomSummary, entries]);
+  }, [activeAccountId, activeRoomId, roomSummary]);
+
+  const datedGroups = useMemo(
+    () => groups.map((group) => ({ group, dateKey: dayKey(group[0].ts) })),
+    [groups],
+  );
 
   if (!activeRoomId) {
     return (
@@ -165,8 +170,6 @@ export function Timeline() {
       </div>
     );
   }
-
-  let lastDateKey: string | null = null;
 
   return (
     <div
@@ -177,10 +180,8 @@ export function Timeline() {
       <div className="flex min-h-full flex-col py-3">
         <div className="mt-auto">
           {beginningInfo && <BeginningOfConversation info={beginningInfo} />}
-          {groups.map((group, i) => {
-            const dateKey = dayKey(group[0].ts);
-            const showDateDivider = dateKey !== lastDateKey;
-            lastDateKey = dateKey;
+          {datedGroups.map(({ group, dateKey }, i) => {
+            const showDateDivider = dateKey !== datedGroups[i - 1]?.dateKey;
             return (
               <div key={`${group[0].eventId}-${i}`}>
                 {showDateDivider && <DateDivider ts={group[0].ts} />}

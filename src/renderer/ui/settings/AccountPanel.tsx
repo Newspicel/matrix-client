@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import type { MatrixClient } from 'matrix-js-sdk';
 import { Camera } from 'lucide-react';
 import { toast } from 'sonner';
@@ -30,9 +30,12 @@ export function AccountPanel({
 
   // Keep the editable field in sync with the resolved profile name
   // (homeserver may answer asynchronously after mount).
-  useEffect(() => {
-    setDisplayName(profile.displayName ?? '');
-  }, [profile.displayName]);
+  const resolvedName = profile.displayName ?? '';
+  const [prevResolvedName, setPrevResolvedName] = useState(resolvedName);
+  if (prevResolvedName !== resolvedName) {
+    setPrevResolvedName(resolvedName);
+    setDisplayName(resolvedName);
+  }
 
   if (!account) return null;
 

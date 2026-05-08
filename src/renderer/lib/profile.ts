@@ -20,13 +20,17 @@ export function useOwnProfile(client: MatrixClient | null, userId: string): OwnP
     avatarMxc: null,
   });
 
-  useEffect(() => {
-    if (!client || !userId) {
-      setProfile({ displayName: null, avatarMxc: null });
-      return;
-    }
+  // Re-seed local state when the client/userId pair changes so the returned
+  // profile reflects the fresh subject before any subscription fires.
+  const profileKey = `${client ? 'c' : 'n'}:${userId}`;
+  const [prevProfileKey, setPrevProfileKey] = useState(profileKey);
+  if (prevProfileKey !== profileKey) {
+    setPrevProfileKey(profileKey);
+    setProfile(client && userId ? readProfile(client, userId) : { displayName: null, avatarMxc: null });
+  }
 
-    setProfile(readProfile(client, userId));
+  useEffect(() => {
+    if (!client || !userId) return;
 
     let cancelled = false;
     if (!client.getUser(userId)?.avatarUrl) {
@@ -55,5 +59,6 @@ export function useOwnProfile(client: MatrixClient | null, userId: string): OwnP
     };
   }, [client, userId]);
 
+  if (!client || !userId) return { displayName: null, avatarMxc: null };
   return profile;
 }

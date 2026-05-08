@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { useAccountsStore } from '@/state/accounts';
 import { useRoomsStore } from '@/state/rooms';
@@ -21,12 +21,15 @@ export function InviteDialog() {
   const [value, setValue] = useState('');
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    if (!roomId) {
+  const isOpen = !!roomId;
+  const [wasOpen, setWasOpen] = useState(isOpen);
+  if (wasOpen !== isOpen) {
+    setWasOpen(isOpen);
+    if (!isOpen) {
       setValue('');
       setBusy(false);
     }
-  }, [roomId]);
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();

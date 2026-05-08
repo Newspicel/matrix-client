@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import type { MatrixClient } from 'matrix-js-sdk';
@@ -83,8 +83,17 @@ function ProfileSection({ room, client }: { room: RoomSummary; client: MatrixCli
 
   // Keep local state in sync with the live room summary so external changes
   // (other clients editing the room name) don't get clobbered by the form.
-  useEffect(() => setName(room.name), [room.name]);
-  useEffect(() => setTopic(room.topic ?? ''), [room.topic]);
+  const [prevRoomName, setPrevRoomName] = useState(room.name);
+  if (prevRoomName !== room.name) {
+    setPrevRoomName(room.name);
+    setName(room.name);
+  }
+  const roomTopic = room.topic ?? '';
+  const [prevRoomTopic, setPrevRoomTopic] = useState(roomTopic);
+  if (prevRoomTopic !== roomTopic) {
+    setPrevRoomTopic(roomTopic);
+    setTopic(roomTopic);
+  }
 
   const nameDirty = name.trim() !== room.name.trim();
   const topicDirty = topic.trim() !== (room.topic ?? '').trim();

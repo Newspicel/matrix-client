@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Camera, Hash, Trash2, Volume2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { MatrixClient } from 'matrix-js-sdk';
@@ -80,8 +80,17 @@ function ProfileSection({ space, client }: { space: RoomSummary; client: MatrixC
   const [savingAvatar, setSavingAvatar] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
-  useEffect(() => setName(space.name), [space.name]);
-  useEffect(() => setTopic(space.topic ?? ''), [space.topic]);
+  const [prevSpaceName, setPrevSpaceName] = useState(space.name);
+  if (prevSpaceName !== space.name) {
+    setPrevSpaceName(space.name);
+    setName(space.name);
+  }
+  const spaceTopic = space.topic ?? '';
+  const [prevSpaceTopic, setPrevSpaceTopic] = useState(spaceTopic);
+  if (prevSpaceTopic !== spaceTopic) {
+    setPrevSpaceTopic(spaceTopic);
+    setTopic(spaceTopic);
+  }
 
   const nameDirty = name.trim() !== space.name.trim();
   const topicDirty = topic.trim() !== (space.topic ?? '').trim();

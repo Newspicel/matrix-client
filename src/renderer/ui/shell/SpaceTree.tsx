@@ -260,7 +260,6 @@ function RoomIcon({
     );
   }
 
-  const Icon = channelIconFor(room);
   return (
     <span className="relative inline-flex h-5 w-5 shrink-0 items-center justify-center">
       <AuthedImage
@@ -269,7 +268,13 @@ function RoomIcon({
         width={28}
         height={28}
         className="h-5 w-5 bg-[var(--color-surface)] object-cover"
-        fallback={<Icon className="h-4 w-4 text-[var(--color-text-faint)]" strokeWidth={1.75} />}
+        fallback={
+          room.isVoice ? (
+            <Volume2 className="h-4 w-4 text-[var(--color-text-faint)]" strokeWidth={1.75} />
+          ) : (
+            <Hash className="h-4 w-4 text-[var(--color-text-faint)]" strokeWidth={1.75} />
+          )
+        }
       />
       {room.isEncrypted && <EncryptedBadge />}
     </span>

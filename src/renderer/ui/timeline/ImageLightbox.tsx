@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import type { EncryptedFile } from '@/lib/mxc';
 import { AuthedImage } from '@/lib/mxc';
@@ -23,6 +23,7 @@ export function ImageLightbox() {
 
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
   const dragRef = useRef<{
     startX: number;
     startY: number;
@@ -34,12 +35,14 @@ export function ImageLightbox() {
 
   // Whenever a new image opens, start fresh — leftover zoom/pan from the
   // previous image would otherwise carry over.
-  useEffect(() => {
+  const [prevLightbox, setPrevLightbox] = useState(lightbox);
+  if (prevLightbox !== lightbox) {
+    setPrevLightbox(lightbox);
     if (lightbox) {
       setZoom(1);
       setPan({ x: 0, y: 0 });
     }
-  }, [lightbox]);
+  }
 
   const onWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -71,6 +74,7 @@ export function ImageLightbox() {
     const dx = e.clientX - drag.startX;
     const dy = e.clientY - drag.startY;
     if (!drag.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+    if (!drag.moved) setDragging(true);
     drag.moved = true;
     if (zoom > 1) setPan({ x: drag.panX + dx, y: drag.panY + dy });
   };
@@ -78,6 +82,7 @@ export function ImageLightbox() {
   const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     const drag = dragRef.current;
     dragRef.current = null;
+    setDragging(false);
     try {
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     } catch {
@@ -128,7 +133,7 @@ export function ImageLightbox() {
                 onDragStart={(e) => e.preventDefault()}
                 style={{
                   transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-                  transition: dragRef.current ? 'none' : 'transform 150ms ease-out',
+                  transition: dragging ? 'none' : 'transform 150ms ease-out',
                 }}
                 className="max-h-[90vh] max-w-[90vw] object-contain"
                 fallback={

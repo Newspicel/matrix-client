@@ -44,16 +44,21 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
   const [editing, setEditing] = useState(false);
   const [reactionMenuOpen, setReactionMenuOpen] = useState(false);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
-  const [toolbarPinned, setToolbarPinned] = useState(false);
-
+  // Pin the hover toolbar while a menu is open, and briefly after closing so
+  // the toolbar doesn't flicker out from under the cursor.
+  const menusOpen = reactionMenuOpen || emojiPickerOpen;
+  const [coolingDown, setCoolingDown] = useState(false);
+  const [prevMenusOpen, setPrevMenusOpen] = useState(menusOpen);
+  if (prevMenusOpen !== menusOpen) {
+    setPrevMenusOpen(menusOpen);
+    if (prevMenusOpen && !menusOpen) setCoolingDown(true);
+  }
   useEffect(() => {
-    if (reactionMenuOpen || emojiPickerOpen) {
-      setToolbarPinned(true);
-      return;
-    }
-    const t = setTimeout(() => setToolbarPinned(false), 200);
+    if (!coolingDown) return;
+    const t = setTimeout(() => setCoolingDown(false), 200);
     return () => clearTimeout(t);
-  }, [reactionMenuOpen, emojiPickerOpen]);
+  }, [coolingDown]);
+  const toolbarPinned = menusOpen || coolingDown;
   const [draft, setDraft] = useState(
     typeof (entry.content as { body?: string }).body === 'string'
       ? ((entry.content as { body?: string }).body ?? '')
@@ -509,12 +514,12 @@ function formatTime24(ts: number): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
-export function messageDomId(eventId: string): string {
+function messageDomId(eventId: string): string {
   // Slashes / colons in matrix event IDs need encoding to be valid id characters.
   return `msg-${encodeURIComponent(eventId)}`;
 }
 
-export function jumpToMessage(eventId: string): void {
+function jumpToMessage(eventId: string): void {
   const el = document.getElementById(messageDomId(eventId));
   if (!el) return;
   el.scrollIntoView({ behavior: 'smooth', block: 'center' });

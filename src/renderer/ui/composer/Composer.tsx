@@ -97,7 +97,10 @@ export function Composer() {
     };
   }, [attachments]);
 
-  useEffect(() => {
+  const roomKey = `${activeAccountId ?? ''}:${activeRoomId ?? ''}`;
+  const [prevRoomKey, setPrevRoomKey] = useState(roomKey);
+  if (prevRoomKey !== roomKey) {
+    setPrevRoomKey(roomKey);
     setAttachments((prev) => {
       for (const a of prev) {
         if (a.previewUrl) URL.revokeObjectURL(a.previewUrl);
@@ -107,7 +110,7 @@ export function Composer() {
     setValue('');
     setAcState((s) => ({ ...s, open: false }));
     setReplyTo(null);
-  }, [activeRoomId, activeAccountId, setReplyTo]);
+  }
 
   function updateAutocomplete(text: string, cursor: number) {
     const detected = detectActiveShortcode(text, cursor);

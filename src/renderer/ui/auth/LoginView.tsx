@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { loginWithPassword, resolveHomeserverUrl } from '@/matrix/login/password';
 import {
   buildSsoRedirectUrl,
@@ -21,6 +21,21 @@ export function LoginView({ onAuthenticated }: { onAuthenticated?: () => void } 
   const [flows, setFlows] = useState<SsoFlowsResult | null>(null);
   const [pendingSsoHomeserver, setPendingSsoHomeserver] = useState<string | null>(null);
 
+  const finishLogin = useCallback(
+    async (credentials: ClientCredentials) => {
+      const metadata: AccountMetadata = {
+        id: `${credentials.userId}:${credentials.deviceId}`,
+        userId: credentials.userId,
+        homeserverUrl: credentials.homeserverUrl,
+        deviceId: credentials.deviceId,
+        createdAt: Date.now(),
+      };
+      await accountManager.addAccount(metadata, credentials);
+      onAuthenticated?.();
+    },
+    [onAuthenticated],
+  );
+
   useEffect(() => {
     const unsub = window.native.deepLink.onSsoCallback(async ({ loginToken }) => {
       if (!pendingSsoHomeserver) return;
@@ -37,7 +52,7 @@ export function LoginView({ onAuthenticated }: { onAuthenticated?: () => void } 
       }
     });
     return unsub;
-  }, [pendingSsoHomeserver]);
+  }, [pendingSsoHomeserver, finishLogin]);
 
   async function onDiscoverFlows() {
     setError(null);
@@ -93,18 +108,6 @@ export function LoginView({ onAuthenticated }: { onAuthenticated?: () => void } 
     const url = buildSsoRedirectUrl(baseUrl, idpId);
     setPendingSsoHomeserver(baseUrl);
     window.open(url, '_blank', 'noopener');
-  }
-
-  async function finishLogin(credentials: ClientCredentials) {
-    const metadata: AccountMetadata = {
-      id: `${credentials.userId}:${credentials.deviceId}`,
-      userId: credentials.userId,
-      homeserverUrl: credentials.homeserverUrl,
-      deviceId: credentials.deviceId,
-      createdAt: Date.now(),
-    };
-    await accountManager.addAccount(metadata, credentials);
-    onAuthenticated?.();
   }
 
   return (

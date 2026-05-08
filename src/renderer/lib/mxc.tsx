@@ -50,10 +50,7 @@ export function useAuthedMedia(
   const [retry, setRetry] = useState(0);
 
   useEffect(() => {
-    if (!client || !mxc) {
-      setEntry(EMPTY_ENTRY);
-      return;
-    }
+    if (!client || !mxc) return;
     const cleanup = makeResyncRetry(client, () => setRetry((n) => n + 1));
     const release = acquire({ client, mxc, width, height }, (next) => {
       setEntry(next);
@@ -65,6 +62,7 @@ export function useAuthedMedia(
     };
   }, [client, mxc, width, height, retry]);
 
+  if (!client || !mxc) return null;
   return entry.url;
 }
 
@@ -82,10 +80,7 @@ export function useAuthedEncryptedMedia(
   const [retry, setRetry] = useState(0);
 
   useEffect(() => {
-    if (!client || !file) {
-      setEntry(EMPTY_ENTRY);
-      return;
-    }
+    if (!client || !file) return;
     const cleanup = makeResyncRetry(client, () => setRetry((n) => n + 1));
     const release = acquire(
       { client, mxc: file.url, encryptedFile: file, mimetype },
@@ -100,6 +95,7 @@ export function useAuthedEncryptedMedia(
     };
   }, [client, file, mimetype, retry]);
 
+  if (!client || !file) return null;
   return entry.url;
 }
 

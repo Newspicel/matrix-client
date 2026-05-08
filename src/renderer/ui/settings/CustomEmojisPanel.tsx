@@ -163,14 +163,23 @@ function PackMetaForm({
   pack: ReturnType<typeof useUserEmojiPack>;
   onChanged: () => void;
 }) {
-  const [displayName, setDisplayName] = useState(pack?.displayName === 'My emojis' ? '' : pack?.displayName ?? '');
-  const [attribution, setAttribution] = useState(pack?.attribution ?? '');
+  const resolvedDisplayName =
+    pack?.displayName === 'My emojis' ? '' : pack?.displayName ?? '';
+  const resolvedAttribution = pack?.attribution ?? '';
+  const [displayName, setDisplayName] = useState(resolvedDisplayName);
+  const [attribution, setAttribution] = useState(resolvedAttribution);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    setDisplayName(pack?.displayName === 'My emojis' ? '' : pack?.displayName ?? '');
-    setAttribution(pack?.attribution ?? '');
-  }, [pack?.displayName, pack?.attribution]);
+  const [prevDisplayName, setPrevDisplayName] = useState(resolvedDisplayName);
+  if (prevDisplayName !== resolvedDisplayName) {
+    setPrevDisplayName(resolvedDisplayName);
+    setDisplayName(resolvedDisplayName);
+  }
+  const [prevAttribution, setPrevAttribution] = useState(resolvedAttribution);
+  if (prevAttribution !== resolvedAttribution) {
+    setPrevAttribution(resolvedAttribution);
+    setAttribution(resolvedAttribution);
+  }
 
   async function onSave() {
     setBusy(true);

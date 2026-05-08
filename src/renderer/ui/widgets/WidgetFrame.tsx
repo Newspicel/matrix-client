@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MatrixClient } from 'matrix-js-sdk';
 import { useAccountsStore } from '@/state/accounts';
 import { accountManager } from '@/matrix/AccountManager';
@@ -44,14 +44,12 @@ function readWidgets(client: MatrixClient, roomId: string): RoomWidget[] {
 export function WidgetFrame({ roomId }: { roomId: string }) {
   const activeAccountId = useAccountsStore((s) => s.activeAccountId);
   const client = activeAccountId ? (accountManager.getClient(activeAccountId) ?? null) : null;
-  const [widgets, setWidgets] = useState<RoomWidget[]>([]);
+  const widgets = useMemo(
+    () => (client ? readWidgets(client, roomId) : []),
+    [client, roomId],
+  );
   const [active, setActive] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  useEffect(() => {
-    if (!client) return;
-    setWidgets(readWidgets(client, roomId));
-  }, [client, roomId]);
 
   useEffect(() => {
     function onMessage(e: MessageEvent) {

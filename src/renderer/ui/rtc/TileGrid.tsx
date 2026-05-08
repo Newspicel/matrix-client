@@ -20,9 +20,11 @@ export function CallTileGrid() {
   const [pinned, setPinned] = useState<string | null>(null);
 
   const sharing = participants.filter((p) => p.screenSharing);
-  // Auto-feature the most recent screen share. If the user pinned a tile, that
-  // wins.
-  const featuredId = pinned ?? sharing[0]?.identity ?? null;
+  // Auto-feature the most recent screen share. If the user pinned a tile that
+  // is still in the call, that wins.
+  const validPinned =
+    pinned && participants.some((p) => p.identity === pinned) ? pinned : null;
+  const featuredId = validPinned ?? sharing[0]?.identity ?? null;
   const featured = featuredId ? participants.find((p) => p.identity === featuredId) : null;
 
   // Drop the featured tile from the strip so it doesn't render twice.
@@ -30,13 +32,6 @@ export function CallTileGrid() {
     () => participants.filter((p) => p.identity !== featured?.identity),
     [participants, featured?.identity],
   );
-
-  // Reset the pin if the pinned participant leaves.
-  useEffect(() => {
-    if (pinned && !participants.find((p) => p.identity === pinned)) {
-      setPinned(null);
-    }
-  }, [pinned, participants]);
 
   if (participants.length === 0) {
     return (

@@ -31,31 +31,39 @@ export function ProfileCard() {
   const close = useUiStore((s) => s.closeProfileCard);
   const [profile, setProfile] = useState<Profile | null>(null);
 
-  useEffect(() => {
-    if (!target) {
-      setProfile(null);
-      return;
+  // Seed the profile from cached state synchronously when target changes, so
+  // the popover renders something immediately instead of waiting on effects.
+  const [prevTarget, setPrevTarget] = useState(target);
+  if (prevTarget !== target) {
+    setPrevTarget(target);
+    if (target) {
+      const client = accountManager.getClient(target.accountId);
+      const room = target.roomId ? client?.getRoom(target.roomId) ?? null : null;
+      const member = room?.getMember(target.userId) ?? null;
+      const powerLevelTags = room ? readPowerLevelTags(room) : null;
+      const cachedUser = client?.getUser(target.userId);
+      setProfile({
+        displayName: member?.name || target.userId,
+        avatarMxc: member?.getMxcAvatarUrl() ?? null,
+        powerLevel: member?.powerLevel,
+        roleName: findRoleName(member?.powerLevel, powerLevelTags),
+        membership: member?.membership,
+        presence: cachedUser?.presence,
+        presenceMsg: cachedUser?.presenceStatusMsg,
+        lastActiveAgo: cachedUser?.lastActiveAgo,
+        currentlyActive: cachedUser?.currentlyActive,
+      });
     }
+  }
+
+  useEffect(() => {
+    if (!target) return;
     const client = accountManager.getClient(target.accountId);
     if (!client) return;
 
     const room = target.roomId ? client.getRoom(target.roomId) : null;
     const member = room?.getMember(target.userId) ?? null;
-    const powerLevelTags = room ? readPowerLevelTags(room) : null;
     const cachedUser = client.getUser(target.userId);
-
-    const initial: Profile = {
-      displayName: member?.name || target.userId,
-      avatarMxc: member?.getMxcAvatarUrl() ?? null,
-      powerLevel: member?.powerLevel,
-      roleName: findRoleName(member?.powerLevel, powerLevelTags),
-      membership: member?.membership,
-      presence: cachedUser?.presence,
-      presenceMsg: cachedUser?.presenceStatusMsg,
-      lastActiveAgo: cachedUser?.lastActiveAgo,
-      currentlyActive: cachedUser?.currentlyActive,
-    };
-    setProfile(initial);
 
     let cancelled = false;
 
@@ -72,14 +80,18 @@ export function ProfileCard() {
         .getProfileInfo(target.userId)
         .then((info) => {
           if (cancelled) return;
-          setProfile((prev) => ({
-            ...(prev ?? initial),
-            // Prefer the per-room values when present (Matrix lets a member
-            // override their global profile inside a room); fall back to the
-            // global profile otherwise.
-            displayName: memberDisplayName ?? info?.displayname ?? target.userId,
-            avatarMxc: memberAvatar ?? info?.avatar_url ?? null,
-          }));
+          setProfile((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  // Prefer the per-room values when present (Matrix lets a member
+                  // override their global profile inside a room); fall back to the
+                  // global profile otherwise.
+                  displayName: memberDisplayName ?? info?.displayname ?? target.userId,
+                  avatarMxc: memberAvatar ?? info?.avatar_url ?? null,
+                }
+              : prev,
+          );
         })
         .catch(() => {});
     }
@@ -92,13 +104,17 @@ export function ProfileCard() {
         .getPresence(target.userId)
         .then((res) => {
           if (cancelled) return;
-          setProfile((prev) => ({
-            ...(prev ?? initial),
-            presence: res.presence,
-            presenceMsg: res.status_msg ?? prev?.presenceMsg,
-            lastActiveAgo: res.last_active_ago ?? prev?.lastActiveAgo,
-            currentlyActive: res.currently_active ?? prev?.currentlyActive,
-          }));
+          setProfile((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  presence: res.presence,
+                  presenceMsg: res.status_msg ?? prev.presenceMsg,
+                  lastActiveAgo: res.last_active_ago ?? prev.lastActiveAgo,
+                  currentlyActive: res.currently_active ?? prev.currentlyActive,
+                }
+              : prev,
+          );
         })
         .catch(() => {});
     }

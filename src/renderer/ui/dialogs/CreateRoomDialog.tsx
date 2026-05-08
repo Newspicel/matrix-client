@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { useAccountsStore } from '@/state/accounts';
 import { useUiStore } from '@/state/ui';
@@ -32,19 +32,20 @@ export function CreateRoomDialog() {
   const [encrypted, setEncrypted] = useState(true);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    if (!target) {
+  const isOpen = target !== null;
+  const [wasOpen, setWasOpen] = useState(isOpen);
+  if (wasOpen !== isOpen) {
+    setWasOpen(isOpen);
+    if (!isOpen) {
       setName('');
       setTopic('');
       setIsPublic(false);
       setEncrypted(true);
     }
-  }, [target]);
+  }
 
   // Public rooms can't run E2EE — toggle encryption off and lock it.
-  useEffect(() => {
-    if (isPublic) setEncrypted(false);
-  }, [isPublic]);
+  const effectiveEncrypted = encrypted && !isPublic;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -57,7 +58,7 @@ export function CreateRoomDialog() {
         name: name.trim(),
         topic: topic.trim() || undefined,
         isPublic,
-        encrypted,
+        encrypted: effectiveEncrypted,
         parentSpaceId,
       });
       if (parentSpaceId) {
@@ -116,7 +117,7 @@ export function CreateRoomDialog() {
         <Toggle
           label="End-to-end encryption"
           hint="Once enabled, encryption can’t be turned off."
-          checked={encrypted}
+          checked={effectiveEncrypted}
           onChange={setEncrypted}
           disabled={busy || isPublic}
         />

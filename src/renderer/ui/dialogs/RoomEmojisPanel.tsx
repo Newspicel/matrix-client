@@ -124,8 +124,16 @@ function PackMetaForm({
   const [attr, setAttr] = useState(attribution);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => setName(displayName), [displayName]);
-  useEffect(() => setAttr(attribution), [attribution]);
+  const [prevDisplayName, setPrevDisplayName] = useState(displayName);
+  if (prevDisplayName !== displayName) {
+    setPrevDisplayName(displayName);
+    setName(displayName);
+  }
+  const [prevAttribution, setPrevAttribution] = useState(attribution);
+  if (prevAttribution !== attribution) {
+    setPrevAttribution(attribution);
+    setAttr(attribution);
+  }
 
   async function onSave() {
     setBusy(true);

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { useAccountsStore } from '@/state/accounts';
 import { useUiStore } from '@/state/ui';
@@ -30,14 +30,17 @@ export function CreateSpaceDialog() {
   const [isPublic, setIsPublic] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    if (!target) {
+  const isOpen = target !== null;
+  const [wasOpen, setWasOpen] = useState(isOpen);
+  if (wasOpen !== isOpen) {
+    setWasOpen(isOpen);
+    if (!isOpen) {
       setName('');
       setTopic('');
       setIsPublic(false);
       setBusy(false);
     }
-  }, [target]);
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
