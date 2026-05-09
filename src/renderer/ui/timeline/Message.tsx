@@ -1,8 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CornerDownRight, Lock, SmilePlus, Reply, Pencil, Trash2, MessageSquare } from 'lucide-react';
+import {
+  CornerDownRight,
+  Lock,
+  SmilePlus,
+  Reply,
+  Pencil,
+  Trash2,
+  MessageSquare,
+  ShieldAlert,
+} from 'lucide-react';
 import { useTimelineStore, type TimelineEntry } from '@/state/timeline';
 import { sanitizeEventHtml, renderPlainBody } from '@/lib/markdown';
 import { HtmlBody } from '@/lib/htmlToReact';
+import { smoothScrollIntoCenter } from '@/lib/smoothScroll';
 import { useAccountsStore } from '@/state/accounts';
 import { useUiStore } from '@/state/ui';
 import { accountManager } from '@/matrix/AccountManager';
@@ -83,8 +93,6 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
   const renderedHtml = useMemo(() => {
     if (entry.isRedacted)
       return '<em style="color: var(--color-text-faint)">[redacted]</em>';
-    if (entry.isDecryptionFailure)
-      return '<em class="text-amber-400">[unable to decrypt]</em>';
     if (isPendingDecryption)
       return '<em style="color: var(--color-text-faint)">decrypting…</em>';
 
@@ -92,7 +100,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
       return sanitizeEventHtml(stripMxReply(content.formatted_body));
     }
     return renderPlainBody(stripPlainReplyFallback(content.body ?? ''));
-  }, [entry.isRedacted, entry.isDecryptionFailure, isPendingDecryption, content.format, content.formatted_body, content.body]);
+  }, [entry.isRedacted, isPendingDecryption, content.format, content.formatted_body, content.body]);
 
   const replyTarget = useTimelineStore((s) => {
     if (!entry.replyToId || !activeRoomId) return null;
@@ -161,8 +169,11 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
   return (
     <div
       id={messageDomId(entry.eventId)}
-      className={`group relative flex gap-3 ${showHeader ? '' : 'mt-0.5'} px-4 py-0.5 hover:bg-[var(--color-hover-overlay-subtle)]`}
+      className={`group relative ${showHeader ? '' : 'mt-0.5'} px-4 py-0.5 hover:bg-[var(--color-hover-overlay-subtle)]`}
     >
+      {/* Toolbar lives outside the content-visibility'd inner wrapper —
+          paint containment from `content-visibility: auto` would otherwise
+          clip the toolbar's right edge against the row's bounds. */}
       <div className={`absolute right-4 top-0 z-10 -translate-y-1/2 items-center gap-px border border-[var(--color-divider)] bg-[var(--color-panel-2)] p-px ${toolbarPinned ? 'flex' : 'hidden group-hover:flex'}`}>
         <DropdownMenu open={reactionMenuOpen} onOpenChange={setReactionMenuOpen}>
           <Tooltip>
@@ -318,6 +329,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
           </>
         )}
       </div>
+      <div className="timeline-row flex gap-3">
       <div className="w-10 flex-shrink-0">
         {showHeader ? (
           <button
@@ -451,8 +463,10 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
             mimetype={content.info?.mimetype}
             label={content.body ?? 'file'}
           />
+        ) : entry.isDecryptionFailure ? (
+          <DecryptionError />
         ) : (
-          <div className="prose dark:prose-invert max-w-none text-sm leading-relaxed text-[var(--color-text)] [&_a]:text-[var(--color-text-strong)] [&_a]:underline [&_a]:underline-offset-2 [&_code]:bg-[var(--color-code-bg)] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.85em] [&_pre]:bg-[var(--color-code-bg)] [&_pre]:p-3 [&_pre]:font-mono [&_pre]:text-xs">
+          <div className="message-body prose dark:prose-invert max-w-none break-words text-sm leading-relaxed text-[var(--color-text)] [&_a]:text-[var(--color-text-strong)] [&_a]:underline [&_a]:underline-offset-2 [&_code]:bg-[var(--color-code-bg)] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.85em] [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_pre]:bg-[var(--color-code-bg)] [&_pre]:p-3 [&_pre]:font-mono [&_pre]:text-xs">
             <HtmlBody html={renderedHtml} client={client} />
           </div>
         )}
@@ -480,6 +494,24 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
             ))}
           </div>
         )}
+      </div>
+      </div>
+    </div>
+  );
+}
+
+function DecryptionError() {
+  return (
+    <div
+      role="alert"
+      className="inline-flex max-w-full items-start gap-2 border border-amber-600/40 bg-amber-950/25 px-2.5 py-1.5 text-xs"
+    >
+      <ShieldAlert className="mt-px h-3.5 w-3.5 shrink-0 text-amber-400" strokeWidth={2} />
+      <div className="min-w-0 flex-1">
+        <div className="font-semibold text-amber-200">Unable to decrypt</div>
+        <div className="text-amber-200/70">
+          You may be missing the keys for this message. Verifying another session can recover them.
+        </div>
       </div>
     </div>
   );
@@ -522,12 +554,20 @@ function messageDomId(eventId: string): string {
 function jumpToMessage(eventId: string): void {
   const el = document.getElementById(messageDomId(eventId));
   if (!el) return;
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  el.classList.remove('message-flash');
-  // Restart the animation by forcing a reflow before re-adding the class.
-  void el.offsetWidth;
-  el.classList.add('message-flash');
-  window.setTimeout(() => el.classList.remove('message-flash'), 1700);
+  const container = el.closest<HTMLElement>('[data-timeline-scroll]');
+  if (container) {
+    smoothScrollIntoCenter(el, container, 380);
+  } else {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  // Wait for the scroll to settle before flashing so the highlight aligns
+  // visually with the moment the message comes to rest.
+  window.setTimeout(() => {
+    el.classList.remove('message-flash');
+    void el.offsetWidth;
+    el.classList.add('message-flash');
+    window.setTimeout(() => el.classList.remove('message-flash'), 1700);
+  }, 320);
 }
 
 function stripMxReply(html: string): string {

@@ -166,6 +166,23 @@ body {
   animation: message-flash 1.6s ease-out;
 }
 
+/* Skip painting off-screen message rows. The browser keeps DOM nodes alive so
+   anchor links, jumpToMessage, and scroll-anchoring still work, but layout/
+   paint costs drop sharply for long timelines. The intrinsic size keeps
+   scrollbar geometry stable while rows are content-hidden. */
+.timeline-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 56px;
+}
+
+/* Force long unbreakable strings (URLs, hashes) to wrap rather than overflow
+   horizontally. `anywhere` is more aggressive than `break-word` and handles
+   the case where a single word is wider than its container. */
+.message-body {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 /* macOS hiddenInset title bar drag region helpers */
 .titlebar-drag {
   -webkit-app-region: drag;
