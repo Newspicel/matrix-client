@@ -8,6 +8,14 @@ import {
   Trash2,
   MessageSquare,
   ShieldAlert,
+  Download,
+  File as FileIcon,
+  FileArchive,
+  FileAudio,
+  FileCode,
+  FileImage,
+  FileText,
+  FileVideo,
 } from 'lucide-react';
 import { useTimelineStore, type TimelineEntry } from '@/state/timeline';
 import { sanitizeEventHtml, renderPlainBody } from '@/lib/markdown';
@@ -84,7 +92,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
     formatted_body?: string;
     url?: string;
     file?: EncryptedFile;
-    info?: { mimetype?: string };
+    info?: { mimetype?: string; size?: number };
   };
 
   const isPendingDecryption =
@@ -461,6 +469,7 @@ export function MessageItem({ entry, showHeader }: MessageItemProps) {
             mxc={content.file ? null : (content.url ?? null)}
             file={content.file ?? null}
             mimetype={content.info?.mimetype}
+            size={content.info?.size}
             label={content.body ?? 'file'}
           />
         ) : entry.isDecryptionFailure ? (
@@ -522,23 +531,140 @@ function FileDownloadLink({
   mxc,
   file,
   mimetype,
+  size,
   label,
 }: {
   client: NonNullable<ReturnType<typeof accountManager.getClient>>;
   mxc: string | null;
   file: EncryptedFile | null;
   mimetype?: string;
+  size?: number;
   label: string;
 }) {
   const plainUrl = useAuthedMedia(client, file ? null : mxc);
   const encUrl = useAuthedEncryptedMedia(client, file, mimetype);
   const url = file ? encUrl : plainUrl;
-  if (!url) return <span className="text-[var(--color-text-muted)]">{label}</span>;
+
+  const Icon = pickFileIcon(mimetype, label);
+  const meta = formatFileMeta(size, mimetype, label);
+
+  const cardClasses =
+    'group/file inline-flex w-full max-w-md items-center gap-3 border border-[var(--color-divider)] bg-[var(--color-panel-2)] px-3 py-2.5 text-sm no-underline transition-colors';
+
+  const inner = (
+    <>
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-[var(--color-surface)] text-[var(--color-text-muted)] transition-colors group-hover/file:text-[var(--color-text)]">
+        <Icon className="h-5 w-5" strokeWidth={1.75} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div
+          className="truncate font-medium text-[var(--color-text)]"
+          title={label}
+        >
+          {label}
+        </div>
+        <div className="truncate font-mono text-[11px] tabular-nums text-[var(--color-text-faint)]">
+          {meta}
+        </div>
+      </div>
+      <Download
+        className={`h-4 w-4 shrink-0 transition-opacity ${url ? 'text-[var(--color-text-muted)] opacity-0 group-hover/file:opacity-100' : 'animate-pulse text-[var(--color-text-faint)] opacity-100'}`}
+        strokeWidth={1.75}
+      />
+    </>
+  );
+
+  if (!url) {
+    return (
+      <div
+        className={`${cardClasses} cursor-progress`}
+        aria-busy="true"
+        aria-label={`Preparing ${label}`}
+      >
+        {inner}
+      </div>
+    );
+  }
+
   return (
-    <a href={url} download={label} target="_blank" rel="noopener" className="text-sky-400">
-      {label}
+    <a
+      href={url}
+      download={label}
+      target="_blank"
+      rel="noopener"
+      className={`${cardClasses} hover:bg-[var(--color-surface)]`}
+    >
+      {inner}
     </a>
   );
+}
+
+function pickFileIcon(mimetype: string | undefined, name: string) {
+  const m = (mimetype ?? '').toLowerCase();
+  if (m.startsWith('image/')) return FileImage;
+  if (m.startsWith('video/')) return FileVideo;
+  if (m.startsWith('audio/')) return FileAudio;
+  if (m === 'application/pdf' || m.startsWith('text/')) return FileText;
+  if (
+    m === 'application/zip' ||
+    m === 'application/x-zip-compressed' ||
+    m === 'application/x-rar-compressed' ||
+    m === 'application/x-7z-compressed' ||
+    m === 'application/x-tar' ||
+    m === 'application/gzip' ||
+    m === 'application/x-bzip2'
+  ) {
+    return FileArchive;
+  }
+  if (
+    m === 'application/json' ||
+    m === 'application/xml' ||
+    m === 'application/javascript' ||
+    m === 'application/typescript'
+  ) {
+    return FileCode;
+  }
+  const ext = extOf(name);
+  if (['zip', 'rar', '7z', 'tar', 'gz', 'tgz', 'bz2', 'xz'].includes(ext)) return FileArchive;
+  if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'avif', 'heic'].includes(ext)) return FileImage;
+  if (['mp4', 'mov', 'mkv', 'webm', 'avi'].includes(ext)) return FileVideo;
+  if (['mp3', 'wav', 'flac', 'ogg', 'm4a', 'opus'].includes(ext)) return FileAudio;
+  if (['pdf', 'txt', 'md', 'rtf'].includes(ext)) return FileText;
+  if (
+    ['js', 'ts', 'tsx', 'jsx', 'json', 'xml', 'yaml', 'yml', 'py', 'rb', 'go', 'rs', 'c', 'cpp', 'h', 'java', 'sh'].includes(ext)
+  ) {
+    return FileCode;
+  }
+  return FileIcon;
+}
+
+function formatFileMeta(size: number | undefined, mimetype: string | undefined, name: string): string {
+  const parts: string[] = [];
+  if (typeof size === 'number' && Number.isFinite(size)) parts.push(formatBytes(size));
+  const tag = formatTypeTag(mimetype, name);
+  if (tag) parts.push(tag);
+  return parts.join(' · ') || 'file';
+}
+
+function formatTypeTag(mimetype: string | undefined, name: string): string {
+  const ext = extOf(name);
+  if (ext) return ext.toUpperCase();
+  if (!mimetype) return '';
+  const sub = mimetype.split('/')[1] ?? '';
+  return sub.split(';')[0]?.toUpperCase() ?? '';
+}
+
+function extOf(name: string): string {
+  const i = name.lastIndexOf('.');
+  if (i < 0 || i === name.length - 1) return '';
+  return name.slice(i + 1).toLowerCase();
+}
+
+function formatBytes(n: number): string {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  if (n < 1024 * 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(n / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 
 function formatTime24(ts: number): string {
