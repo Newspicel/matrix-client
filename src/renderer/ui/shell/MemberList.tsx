@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { MatrixEvent, Room, RoomMember, RoomState } from 'matrix-js-sdk';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { MatrixClient, MatrixEvent, Room, RoomMember, RoomState } from 'matrix-js-sdk';
 import { RoomEvent, RoomStateEvent } from 'matrix-js-sdk';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAccountsStore } from '@/state/accounts';
 import { useUiStore } from '@/state/ui';
 import { accountManager } from '@/matrix/AccountManager';
@@ -30,6 +31,10 @@ interface MemberGroup {
   label: string | null;
   members: MemberView[];
 }
+
+type Row =
+  | { kind: 'header'; key: string; label: string; count: number }
+  | { kind: 'member'; key: string; member: MemberView };
 
 export function MemberList() {
   const activeAccountId = useAccountsStore((s) => s.activeAccountId);
@@ -107,6 +112,50 @@ export function MemberList() {
 
   const groups = useMemo(() => groupMembers(members, tags), [members, tags]);
 
+  const rows = useMemo<Row[]>(() => {
+    const out: Row[] = [];
+    for (const g of groups) {
+      if (g.label) {
+        out.push({
+          kind: 'header',
+          key: `h:${g.key}`,
+          label: g.label,
+          count: g.members.length,
+        });
+      }
+      for (const m of g.members) {
+        out.push({ kind: 'member', key: m.userId, member: m });
+      }
+    }
+    return out;
+  }, [groups]);
+
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: (i) => (rows[i].kind === 'header' ? 32 : 32),
+    overscan: 8,
+    getItemKey: (i) => rows[i].key,
+  });
+
+  const handleSelect = useCallback(
+    (userId: string, rect: DOMRect) => {
+      if (!activeAccountId || !activeRoomId) return;
+      openProfileCard({
+        accountId: activeAccountId,
+        roomId: activeRoomId,
+        userId,
+        anchor: { x: rect.left - 296, y: rect.top - 20 },
+      });
+    },
+    [activeAccountId, activeRoomId, openProfileCard],
+  );
+
+  const showEmpty = !activeRoomId;
+  const showLoading = !showEmpty && members.length === 0;
+  const virtualItems = virtualizer.getVirtualItems();
+
   return (
     <aside
       className="hidden h-full w-60 shrink-0 flex-col border-l border-[var(--color-divider)] bg-[var(--color-panel)] text-sm xl:flex"
@@ -120,68 +169,91 @@ export function MemberList() {
           </span>
         )}
       </header>
-      <div className="flex-1 overflow-y-auto p-2 text-[var(--color-text-muted)]">
-        {!activeRoomId ? (
+      <div
+        ref={parentRef}
+        className="flex-1 overflow-y-auto p-2 text-[var(--color-text-muted)]"
+      >
+        {showEmpty ? (
           <p className="px-2 pt-4 text-xs italic text-[var(--color-text-faint)]">
             Select a room to view members.
           </p>
-        ) : members.length === 0 ? (
+        ) : showLoading ? (
           <p className="px-2 pt-4 text-xs italic text-[var(--color-text-faint)]">
             Loading members…
           </p>
         ) : (
-          groups.map((group) => (
-            <div key={group.key} className="pb-2">
-              {group.label && (
-                <div className="flex items-baseline justify-between px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
-                  <span>{group.label}</span>
-                  <span className="tabular-nums text-[var(--color-text-faint)]">
-                    {group.members.length}
-                  </span>
+          <div
+            style={{
+              height: virtualizer.getTotalSize(),
+              position: 'relative',
+              width: '100%',
+            }}
+          >
+            {virtualItems.map((vi) => {
+              const row = rows[vi.index];
+              return (
+                <div
+                  key={vi.key}
+                  data-index={vi.index}
+                  ref={virtualizer.measureElement}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${vi.start}px)`,
+                  }}
+                >
+                  {row.kind === 'header' ? (
+                    <div className="flex items-baseline justify-between px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
+                      <span>{row.label}</span>
+                      <span className="tabular-nums text-[var(--color-text-faint)]">
+                        {row.count}
+                      </span>
+                    </div>
+                  ) : (
+                    <MemberRow
+                      member={row.member}
+                      client={client}
+                      onSelect={handleSelect}
+                    />
+                  )}
                 </div>
-              )}
-              <ul className="space-y-px">
-                {group.members.map((m) => (
-                  <li key={m.userId}>
-                    <button
-                      type="button"
-                      onClick={(ev) => {
-                        if (!activeAccountId) return;
-                        openProfileCard({
-                          accountId: activeAccountId,
-                          roomId: activeRoomId,
-                          userId: m.userId,
-                          anchor: {
-                            x: ev.currentTarget.getBoundingClientRect().left - 296,
-                            y: ev.currentTarget.getBoundingClientRect().top - 20,
-                          },
-                        });
-                      }}
-                      className="flex w-full items-center gap-2 px-2 py-1 text-left text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-hover-overlay-subtle)] hover:text-[var(--color-text-strong)]"
-                      title={m.userId}
-                    >
-                      <AuthedImage
-                        client={client}
-                        mxc={m.avatarMxc}
-                        width={32}
-                        height={32}
-                        className="h-6 w-6 bg-[var(--color-surface)] object-cover"
-                        fallback={
-                          <InitialBadge text={m.name} className="h-6 w-6 text-[11px]" />
-                        }
-                      />
-                      <span className="flex-1 truncate">{m.name}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))
+              );
+            })}
+          </div>
         )}
       </div>
     </aside>
   );
 }
+
+interface MemberRowProps {
+  member: MemberView;
+  client: MatrixClient | null | undefined;
+  onSelect: (userId: string, rect: DOMRect) => void;
+}
+
+const MemberRow = memo(function MemberRow({ member, client, onSelect }: MemberRowProps) {
+  return (
+    <button
+      type="button"
+      onClick={(ev) => onSelect(member.userId, ev.currentTarget.getBoundingClientRect())}
+      className="flex w-full items-center gap-2 px-2 py-1 text-left text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-hover-overlay-subtle)] hover:text-[var(--color-text-strong)]"
+      title={member.userId}
+    >
+      <AuthedImage
+        client={client}
+        mxc={member.avatarMxc}
+        width={32}
+        height={32}
+        className="h-6 w-6 bg-[var(--color-surface)] object-cover"
+        fallback={<InitialBadge text={member.name} className="h-6 w-6 text-[11px]" />}
+      />
+      <span className="flex-1 truncate">{member.name}</span>
+    </button>
+  );
+});
 
 function toMemberViews(members: RoomMember[]): MemberView[] {
   return members
