@@ -7,6 +7,8 @@ import { useUiStore } from '@/state/ui';
 import { accountManager } from '@/matrix/AccountManager';
 import { AuthedImage } from '@/lib/mxc';
 import { InitialBadge } from '@/ui/primitives/InitialBadge';
+import { useTypingUsers } from '@/lib/typing';
+import { TypingDots } from '@/ui/primitives/TypingDots';
 
 // Cinny-originated convention for naming power-level bands, used by several
 // clients for interop. If the room has no such state event, we render a flat
@@ -112,6 +114,12 @@ export function MemberList() {
 
   const groups = useMemo(() => groupMembers(members, tags), [members, tags]);
 
+  const typingUsers = useTypingUsers(activeAccountId, activeRoomId);
+  const typingSet = useMemo(
+    () => new Set(typingUsers.map((u) => u.userId)),
+    [typingUsers],
+  );
+
   const rows = useMemo<Row[]>(() => {
     const out: Row[] = [];
     for (const g of groups) {
@@ -215,6 +223,7 @@ export function MemberList() {
                     <MemberRow
                       member={row.member}
                       client={client}
+                      isTyping={typingSet.has(row.member.userId)}
                       onSelect={handleSelect}
                     />
                   )}
@@ -231,16 +240,22 @@ export function MemberList() {
 interface MemberRowProps {
   member: MemberView;
   client: MatrixClient | null | undefined;
+  isTyping: boolean;
   onSelect: (userId: string, rect: DOMRect) => void;
 }
 
-const MemberRow = memo(function MemberRow({ member, client, onSelect }: MemberRowProps) {
+const MemberRow = memo(function MemberRow({
+  member,
+  client,
+  isTyping,
+  onSelect,
+}: MemberRowProps) {
   return (
     <button
       type="button"
       onClick={(ev) => onSelect(member.userId, ev.currentTarget.getBoundingClientRect())}
       className="flex w-full items-center gap-2 px-2 py-1 text-left text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-hover-overlay-subtle)] hover:text-[var(--color-text-strong)]"
-      title={member.userId}
+      title={isTyping ? `${member.userId} is typing…` : member.userId}
     >
       <AuthedImage
         client={client}
@@ -251,6 +266,9 @@ const MemberRow = memo(function MemberRow({ member, client, onSelect }: MemberRo
         fallback={<InitialBadge text={member.name} className="h-6 w-6 text-[11px]" />}
       />
       <span className="flex-1 truncate">{member.name}</span>
+      {isTyping && (
+        <TypingDots className="shrink-0 text-[var(--color-text-muted)]" />
+      )}
     </button>
   );
 });

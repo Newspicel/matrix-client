@@ -24,6 +24,8 @@ import { useAvailableEmoticons, useAvailableStickers } from '@/state/customEmoji
 import { EmoteImage } from '@/ui/timeline/EmoteImage';
 import { sendSticker } from '@/matrix/messageOps';
 import { StickerPicker } from './StickerPicker';
+import { useTypingUsers, formatTypingLabel } from '@/lib/typing';
+import { TypingDots } from '@/ui/primitives/TypingDots';
 
 interface PendingAttachment {
   id: string;
@@ -74,6 +76,9 @@ export function Composer() {
 
   const replyPreview = useMemo(() => formatReplyPreview(replyTarget), [replyTarget]);
 
+  const typingUsers = useTypingUsers(activeAccountId, activeRoomId);
+  const typingLabel = useMemo(() => formatTypingLabel(typingUsers), [typingUsers]);
+
   useEffect(() => {
     if (!replyToId) return;
     const el = textareaRef.current;
@@ -111,6 +116,31 @@ export function Composer() {
     setAcState((s) => ({ ...s, open: false }));
     setReplyTo(null);
   }
+
+  // Send `m.typing` while the user has draft text. Matrix's typing EDU expires
+  // server-side after `timeout`, so we refresh on an interval well under that
+  // window and clear the flag on send / clear / room-change / unmount.
+  const hasDraft = value.trim().length > 0;
+  useEffect(() => {
+    if (!hasDraft || !activeAccountId || !activeRoomId) return;
+    const client = accountManager.getClient(activeAccountId);
+    if (!client) return;
+    const roomId = activeRoomId;
+    const TYPING_TIMEOUT_MS = 30_000;
+    const REFRESH_MS = 20_000;
+    let cancelled = false;
+    const send = () => {
+      if (cancelled) return;
+      client.sendTyping(roomId, true, TYPING_TIMEOUT_MS).catch(() => {});
+    };
+    send();
+    const interval = window.setInterval(send, REFRESH_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      client.sendTyping(roomId, false, 0).catch(() => {});
+    };
+  }, [hasDraft, activeAccountId, activeRoomId]);
 
   function updateAutocomplete(text: string, cursor: number) {
     const detected = detectActiveShortcode(text, cursor);
@@ -516,6 +546,18 @@ export function Composer() {
             <TooltipContent>Send</TooltipContent>
           </Tooltip>
         </div>
+      </div>
+      <div
+        className="flex h-4 items-center gap-1.5 px-1 pt-1 text-[11px] leading-none text-[var(--color-text-muted)]"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {typingUsers.length > 0 && (
+          <>
+            <TypingDots className="text-[var(--color-text-muted)]" />
+            <span className="truncate">{typingLabel}</span>
+          </>
+        )}
       </div>
     </div>
   );
