@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { RoomSummary } from '@/state/rooms';
-import { getOrphanRooms, getSpaceTree, getTopLevelSpaces } from './spaces';
+import {
+  LOBBY_ROOM_ID,
+  getOrphanRooms,
+  getSpaceTree,
+  getTopLevelSpaces,
+  isLobbyRoomId,
+} from './spaces';
 
 function room(
   id: string,
@@ -99,5 +105,69 @@ describe('getTopLevelSpaces', () => {
     expect(getTopLevelSpaces([org, eng, other]).map((r) => r.roomId).sort()).toEqual(
       ['!org', '!other'],
     );
+  });
+
+  it('ignores non-space children listed under m.space.child', () => {
+    // A space's m.space.child can list non-space rooms; those should not
+    // affect which other spaces qualify as top-level.
+    const org = room('!org', { isSpace: true, spaceChildIds: ['!general'] });
+    const general = room('!general');
+    const other = room('!other', { isSpace: true });
+    expect(getTopLevelSpaces([org, general, other]).map((r) => r.roomId).sort()).toEqual(
+      ['!org', '!other'],
+    );
+  });
+
+  it('returns no spaces when none exist', () => {
+    expect(getTopLevelSpaces([room('!a'), room('!b')])).toEqual([]);
+  });
+});
+
+describe('isLobbyRoomId', () => {
+  it('matches the sentinel id', () => {
+    expect(isLobbyRoomId(LOBBY_ROOM_ID)).toBe(true);
+  });
+
+  it('does not match real room ids or null', () => {
+    expect(isLobbyRoomId('!real')).toBe(false);
+    expect(isLobbyRoomId(null)).toBe(false);
+    expect(isLobbyRoomId('')).toBe(false);
+  });
+});
+
+describe('getSpaceTree edge cases', () => {
+  it('skips m.space.child entries pointing at unknown rooms', () => {
+    const org = room('!org', { isSpace: true, spaceChildIds: ['!ghost', '!real'] });
+    const real = room('!real');
+    const tree = getSpaceTree([org, real], '!org');
+    expect(tree.directRooms.map((r) => r.roomId)).toEqual(['!real']);
+  });
+
+  it('preserves the order of m.space.child', () => {
+    const org = room('!org', {
+      isSpace: true,
+      spaceChildIds: ['!c', '!a', '!b'],
+    });
+    const a = room('!a');
+    const b = room('!b');
+    const c = room('!c');
+    const tree = getSpaceTree([org, a, b, c], '!org');
+    expect(tree.directRooms.map((r) => r.roomId)).toEqual(['!c', '!a', '!b']);
+  });
+});
+
+describe('getOrphanRooms edge cases', () => {
+  it('does not consider a space as an orphan room (spaces have their own surface)', () => {
+    const lonely = room('!lonely', { isSpace: true });
+    expect(getOrphanRooms([lonely])).toEqual([]);
+  });
+
+  it('does not consider DMs as orphans', () => {
+    const dm = room('!dm', { isDirect: true });
+    expect(getOrphanRooms([dm])).toEqual([]);
+  });
+
+  it('returns nothing on an empty input', () => {
+    expect(getOrphanRooms([])).toEqual([]);
   });
 });
